@@ -1007,7 +1007,11 @@ public class ServletHandler extends Container implements HttpHandler
     /* ------------------------------------------------------------ */
     class Context implements ServletContext
     {
-        
+        @Override
+        public String getContextPath() {
+            return null;
+        }
+
         /* -------------------------------------------------------- */
         ServletHandler getServletHandler()
         {
