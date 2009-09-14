@@ -1,0 +1,119 @@
+body {
+    font-family: Arial, Verdana, Helvetica, sans-serif;
+}
+
+a, a:visited, .link {
+    color: #0033ff;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+h1 {
+    border-bottom: 1px solid black;
+}
+
+#footer {
+    border-top: 1px solid black;
+    font-size: 12px;
+    text-align: center;
+    padding-top: 5px;
+    margin-top: 20px;
+}
+
+table {
+    margin: 0;
+}
+
+th, td {
+    border: 0;
+    padding: 0;
+}
+
+.label {
+    margin: 2px 0;
+    padding-right: 30px;
+    white-space: nowrap;
+}
+
+#slider {               
+    width: 450px;
+}
+
+.tooltip {
+    position: absolute;
+    display: none;
+    border: 1px solid #999999;
+    padding: 2px;
+    background-color: #ffffcc;
+}
+
+.block {
+    margin: 20px 0;
+}
+
+.block td {
+    overflow: hidden;
+    font-size: 11px;
+}
+
+.block td div {
+    white-space: nowrap;
+}
+
+.block tr {
+    border-bottom: 1px solid #cccccc;
+}
+
+.path div {
+    width: 125px;
+    font-weight: bold;
+    overflow: hidden;
+}
+
+.host div {
+    width: 75px;
+}
+
+.responseCode div {
+    width: 125px;
+    padding-left: 10px;
+    color: #cccccc;
+}
+
+.error_code div {
+    color: #ff6666 !important;
+}
+
+.bytes div {
+    width: 50px;
+    text-align: right;
+}
+
+.chart div {
+    width: 450px;
+}
+
+.fullPath {
+    font-size: 16px;
+    position: absolute;
+    background-color: #fff;
+    font-weight: bold;
+    padding-right: 20px;
+    white-space: nowrap;
+    width: 800px !important;
+}
+
+.blockRow {
+    background-color: #cccccc;
+    font-size: 15px !important;
+    font-weight: bold;
+    padding: 5px;
+}
+
+.bytesHeader {
+    text-align: right;
+}
+
+.responseTimeHeader {
+    text-align: center;
+}

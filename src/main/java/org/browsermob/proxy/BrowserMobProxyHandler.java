@@ -23,12 +23,32 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
     private static final Log LOG = new Log();
 
     private int simulatedBps;
+    private ProxyServer proxyServer;
+    private MockResponse mockResponse = new MockResponse();
 
     public BrowserMobProxyHandler() {
         super(true, "", "", false, false);
     }
 
-    private IOStats customProxyPlainTextRequest(URL url, String pathInContext, String pathParams, HttpRequest request, HttpResponse response) throws IOException {
+    private IOStats customProxyPlainTextRequest(URL url, String pathInContext, String pathParams, HttpRequest request, HttpResponse response, boolean controlRequest) throws IOException {
+        if (mockResponse.matches(url)) {
+            Date now = new Date();
+
+            try {
+                Thread.sleep(mockResponse.getTime());
+            } catch (InterruptedException e) {
+                // ok, fine whatever
+            }
+
+            response.setStatus(mockResponse.getResponseCode());
+            response.setContentType(mockResponse.getContentType());
+            byte[] bytes = mockResponse.getContent().getBytes("UTF-8");
+            response.getOutputStream().write(bytes);
+            request.setHandled(true);
+
+            return new IOStats(null, new IOUtils.Stats(bytes.length, now, null));
+        }
+
         URLConnection connection = url.openConnection();
         connection.setAllowUserInteraction(false);
 
@@ -92,7 +112,7 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
             InputStream in = request.getInputStream();
             if (hasContent) {
                 connection.setDoOutput(true);
-                inputStats = IOUtils.copyWithStats(in, connection.getOutputStream(), new BandwidthSimulator(simulatedBps), false);
+                inputStats = IOUtils.copyWithStats(in, connection.getOutputStream(), new BandwidthSimulator(controlRequest ? Integer.MAX_VALUE : simulatedBps), false);
             }
 
             // Connect
@@ -149,7 +169,7 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
         request.setHandled(true);
         IOUtils.Stats outputStats = null;
         if (proxy_in != null) {
-            outputStats = IOUtils.copyWithStats(proxy_in, response.getOutputStream(), new BandwidthSimulator(simulatedBps), false);
+            outputStats = IOUtils.copyWithStats(proxy_in, response.getOutputStream(), new BandwidthSimulator(controlRequest ? Integer.MAX_VALUE : simulatedBps), false);
         }
 
         return new IOStats(inputStats, outputStats);
@@ -157,6 +177,9 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
 
     @SuppressWarnings({"unchecked"})
     protected long proxyPlainTextRequest(URL url, String pathInContext, String pathParams, HttpRequest request, HttpResponse response) throws IOException {
+        // this is for the control interface, so just do a vanilla proxy and don't simulate bandwidth, track objects, etc
+        boolean controlRequest = url.getPort() == 8081 && url.getHost().equals("localhost");
+
         try {
             String urlStr = url.toString();
 
@@ -172,14 +195,26 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
             }
 
             Date start = new Date();
-
-            IOStats stats = customProxyPlainTextRequest(url, pathInContext, pathParams, request, response);
+            HttpObject httpObject = new HttpObject(start, url, request.getMethod());
+            IOStats stats = customProxyPlainTextRequest(url, pathInContext, pathParams, request, response, controlRequest);
 
             long bytes = 0;
-            Date ttfb = null;
+            long ttfb = 0;
+            Date end = new Date();
+            long ttlb = end.getTime() - start.getTime();
             if (stats.getOutputStats() != null) {
                 bytes = stats.getOutputStats().getBytesCopied();
-                ttfb = stats.getOutputStats().getTimeToFirstByte();
+                ttfb = stats.getOutputStats().getTimeToFirstByte().getTime() - start.getTime();
+            }
+
+            httpObject.setBytes(bytes);
+            httpObject.setResponseCode(response.getStatus());
+            httpObject.setTimeToFirstByte(ttfb);
+            httpObject.setTimeToLastByte(ttlb);
+            httpObject.setEnd(end);
+
+            if (!controlRequest) {
+                proxyServer.record(httpObject);
             }
 
             return bytes;
@@ -201,6 +236,19 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
 
         return ua;
     }
+
+    public void setProxyServer(ProxyServer proxyServer) {
+        this.proxyServer = proxyServer;
+    }
+
+    public MockResponse getMockResponse() {
+        return mockResponse;
+    }
+
+    public void setMockResponse(MockResponse mockResponse) {
+        this.mockResponse = mockResponse;
+    }
+
 
     private class IOStats {
         private IOUtils.Stats inputStats;
