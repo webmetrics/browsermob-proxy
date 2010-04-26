@@ -7,11 +7,11 @@ import org.mortbay.jetty.webapp.WebAppContext;
 import java.net.URL;
 
 public class WebServer {
-    public static void start() throws Exception {
+    public static void start(int port) throws Exception {
         Server server = new Server();
 
         SelectChannelConnector connector = new SelectChannelConnector();
-        connector.setPort(8081);
+        connector.setPort(port);
         server.addConnector(connector);
 
         URL baseUrl = WebServer.class.getResource("/src/main/webapp");
