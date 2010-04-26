@@ -4,6 +4,8 @@ import org.mortbay.jetty.Server;
 import org.mortbay.jetty.nio.SelectChannelConnector;
 import org.mortbay.jetty.webapp.WebAppContext;
 
+import java.net.URL;
+
 public class WebServer {
     public static void start() throws Exception {
         Server server = new Server();
@@ -12,7 +14,8 @@ public class WebServer {
         connector.setPort(8081);
         server.addConnector(connector);
 
-        WebAppContext webApp = new WebAppContext("src/main/webapp", "/");
+        URL baseUrl = WebServer.class.getResource("/src/main/webapp");
+        WebAppContext webApp = new WebAppContext(baseUrl.toString(), "/");
         webApp.setContextPath("/");
         server.addHandler(webApp);
         server.start();
