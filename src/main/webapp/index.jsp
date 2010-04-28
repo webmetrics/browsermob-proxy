@@ -202,7 +202,7 @@ The last ten blocks of network requests are displayed below. Each block is group
 
 <div id="footer">
     Copyright BrowserMob LLC 2009 | Distributed under the Apache 2.0 License | <a href="http://proxy.browsermob.com">http://proxy.browsermob.com</a><br/>
-    This project uses code from the <a href="http://seleniumhq.org">Selenium</a>, <a href="http://mortbay.org">Jetty</a>, <a href="http://jquery.com">jQuery</a>, <a href="">Grinder</a>, and <a href="http://www.opensymphony.com">OpenSymphony</a> open source projects.
+    This project uses code from the <a href="http://seleniumhq.org">Selenium</a>, <a href="http://mortbay.org">Jetty</a>, <a href="http://jquery.com">jQuery</a>, <a href="http://grinder.sourceforge.net">Grinder</a>, and <a href="http://www.opensymphony.com">OpenSymphony</a> open source projects.
 </div>
 
 </body>
