@@ -32,7 +32,7 @@ import java.io.Serializable;
  * from other sources without queing overheads.
  * 
  * @version $Id: ThreadPool.java,v 1.41 2005/08/13 00:01:28 gregwilkins Exp $
- * @author Juancarlo A�ez <juancarlo@modelistica.com>
+ * @author Juancarlo Aï¿½ez <juancarlo@modelistica.com>
  * @author Greg Wilkins <gregw@mortbay.com>
  */
 public class ThreadPool implements LifeCycle,Serializable

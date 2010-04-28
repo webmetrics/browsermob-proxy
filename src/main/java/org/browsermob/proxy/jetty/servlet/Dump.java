@@ -471,7 +471,7 @@ public class Dump extends HttpServlet
             
             page.add(Break.para);
             page.add(new Heading(1, "International Characters"));
-            page.add("Directly encoced:  Dürst<br/>");
+            page.add("Directly encoced:  DÃ¼rst<br/>");
             page.add("HTML reference: D&uuml;rst<br/>");
             page.add("Decimal (252) 8859-1: D&#252;rst<br/>");
             page.add("Hex (xFC) 8859-1: D&#xFC;rst<br/>");

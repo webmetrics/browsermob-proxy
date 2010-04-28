@@ -46,7 +46,7 @@ import java.security.cert.X509Certificate;
  * @author Greg Wilkins (gregw@mortbay.com)
  * @author Court Demas (court@kiwiconsulting.com)
  * @author Forge Research Pty Ltd ACN 003 491 576
- * @author Jan Hlavatý
+ * @author Jan HlavatÃ½
  */
 public abstract class JsseListener extends SocketListener
 {

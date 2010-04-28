@@ -30,7 +30,7 @@ import java.util.Date;
 /** Abstract resource class.
  *
  * @version $Id: Resource.java,v 1.31 2005/10/21 11:36:56 gregwilkins Exp $
- * @author Nuno Preguiça
+ * @author Nuno PreguiÃ§a
  * @author Greg Wilkins (gregw)
  */
 public abstract class Resource implements Serializable
