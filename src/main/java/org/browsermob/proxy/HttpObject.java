@@ -5,6 +5,9 @@ import org.directwebremoting.annotations.DataTransferObject;
 import java.net.URL;
 import java.util.Date;
 
+import java.util.List;
+import java.util.Map;
+
 @DataTransferObject
 public class HttpObject {
     private int objectNum;
@@ -20,6 +23,12 @@ public class HttpObject {
     private String host;
     private String path;
     private String queryString;
+    // headers, cookies
+    // List<Map<String,String>> ?? best way to do it? all are ugly
+    private Map<String,String> requestHeaders;
+    private Map<String,String> requestCookies;
+    private Map<String,String> responseHeaders;
+
 
     public HttpObject() {
     }
@@ -108,5 +117,21 @@ public class HttpObject {
 
     public Date getEnd() {
         return end;
+    }
+
+    public void setResponseHeaders(Map<String,String> responseHeaders) {
+        this.responseHeaders = responseHeaders;
+    }
+
+    public Map<String,String> getResponseHeaders() {
+        return responseHeaders;
+    }
+
+    public void setRequestHeaders(Map<String,String> requestHeaders) {
+        this.requestHeaders = requestHeaders;
+    }
+
+    public Map<String,String> getRequestHeaders() {
+        return requestHeaders;
     }
 }

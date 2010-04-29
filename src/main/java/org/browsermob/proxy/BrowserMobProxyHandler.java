@@ -2,6 +2,7 @@ package org.browsermob.proxy;
 
 import org.browsermob.proxy.jetty.http.HttpFields;
 import org.browsermob.proxy.jetty.http.HttpRequest;
+import org.browsermob.proxy.jetty.http.HttpMessage;
 import org.browsermob.proxy.jetty.http.HttpResponse;
 import org.browsermob.proxy.selenium.SeleniumProxyHandler;
 import org.browsermob.proxy.util.BandwidthSimulator;
@@ -18,6 +19,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.Map;
+import java.util.HashMap;
 
 public class BrowserMobProxyHandler extends SeleniumProxyHandler {
     private static final Log LOG = new Log();
@@ -213,6 +216,9 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
             httpObject.setTimeToLastByte(ttlb);
             httpObject.setEnd(end);
 
+            // ADD FUN HTTP STUFF HERE
+            httpObject.setRequestHeaders(httpFieldsAsMap(request));
+            httpObject.setResponseHeaders(httpFieldsAsMap(response));
             if (!controlRequest) {
                 proxyServer.record(httpObject);
             }
@@ -223,6 +229,21 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
             throw new RuntimeException("Exception while proxying data", e);
         }
     }
+
+
+    private Map<String,String> httpFieldsAsMap(HttpMessage fields) {
+        Map<String,String> headers = new HashMap<String,String>();
+        Enumeration<String> names = fields.getFieldNames();
+        while(names.hasMoreElements()) {
+            String name = names.nextElement();
+            // todo: some fields have multiple values?
+            String value = fields.getField(name);
+            headers.put(name, value);
+        }
+        return headers;
+    }
+
+    //private void setHeaders
 
     public void setSimulatedBps(int simulatedBps) {
         this.simulatedBps = simulatedBps;

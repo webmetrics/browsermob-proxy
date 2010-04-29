@@ -17,6 +17,7 @@ public class ProxyServer {
     private Server server;
     private int bandwidth = 500; // KB/sec
     private BrowserMobProxyHandler handler;
+    private final int MAXBLOCKS = 10;
     private List<Block> blocks = new ArrayList<Block>();
 
     public void start() throws Exception {
@@ -71,8 +72,8 @@ public class ProxyServer {
             newBlock.add(httpObject);
             blocks.add(0, newBlock);
 
-            if (blocks.size() > 10) {
-                blocks.remove(10);
+            if (blocks.size() > MAXBLOCKS) {
+                blocks.remove(MAXBLOCKS);
             }
         }
     }
