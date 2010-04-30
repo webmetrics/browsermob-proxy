@@ -17,12 +17,13 @@ public class ProxyServer {
     private Server server;
     private int bandwidth = 500; // KB/sec
     private BrowserMobProxyHandler handler;
-    private final int MAXBLOCKS = 10;
+    private final int MAXBLOCKS = 100;
+    private int port = 9638;
     private List<Block> blocks = new ArrayList<Block>();
 
     public void start() throws Exception {
         server = new Server();
-        server.addListener(new SocketListener(new InetAddrPort(9638)));
+        server.addListener(new SocketListener(new InetAddrPort(getPort()))); // todo: arg?
         HttpContext context = new HttpContext();
         context.setContextPath("/");
         server.addContext(context);
@@ -37,6 +38,10 @@ public class ProxyServer {
         clearBlocks();
 
         server.start();
+    }
+
+    public void stop() throws Exception {
+        server.stop();
     }
 
     @RemoteMethod
@@ -60,6 +65,11 @@ public class ProxyServer {
         return new ArrayList<Block>(blocks);
     }
 
+    @RemoteMethod
+    public synchronized List<Block> getLastNBlocks(int n) {
+        return new ArrayList<Block>(blocks.subList(0, n));
+    }
+
     public synchronized void record(HttpObject httpObject) {
         if (blocks.isEmpty()) {
             // put in the first block
@@ -76,6 +86,14 @@ public class ProxyServer {
                 blocks.remove(MAXBLOCKS);
             }
         }
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
     }
 
     @RemoteMethod
