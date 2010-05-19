@@ -131,6 +131,11 @@
             <version>1.0</version>
         </dependency>
 
+        <dependency>
+          <groupId>org.codehaus.jackson</groupId>
+          <artifactId>jackson-jaxrs</artifactId>
+          <version>1.5.0</version>
+        </dependency>
     </dependencies>
 
     <reporting>
