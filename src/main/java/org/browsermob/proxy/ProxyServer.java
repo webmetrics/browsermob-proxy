@@ -1,5 +1,7 @@
 package org.browsermob.proxy;
 
+import net.jcip.annotations.GuardedBy;
+
 import com.google.inject.Singleton;
 import org.browsermob.proxy.jetty.http.HttpContext;
 import org.browsermob.proxy.jetty.http.SocketListener;
@@ -11,6 +13,7 @@ import org.directwebremoting.annotations.RemoteProxy;
 import java.util.ArrayList;
 import java.util.List;
 
+
 @Singleton
 @RemoteProxy
 public class ProxyServer {
@@ -19,6 +22,7 @@ public class ProxyServer {
     private BrowserMobProxyHandler handler;
     private final int MAXBLOCKS = 100;
     private int port = 9638;
+    @GuardedBy("this")
     private List<Block> blocks = new ArrayList<Block>();
 
     public void start() throws Exception {
@@ -45,7 +49,7 @@ public class ProxyServer {
     }
 
     @RemoteMethod
-    public void clearBlocks() {
+    public synchronized void clearBlocks() {
         this.blocks.clear();
     }
 
