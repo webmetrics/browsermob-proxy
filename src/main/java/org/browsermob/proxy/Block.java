@@ -10,7 +10,8 @@ import java.util.List;
 
 @DataTransferObject
 public class Block {
-    private String id = GUID.generateGUID();
+    // TODO: Is this needed at all?
+    //private String id = GUID.generateGUID();
     private Date start = new Date(Long.MAX_VALUE);
     private Date end = new Date(0);
     private long responseTime;
@@ -78,7 +79,7 @@ public class Block {
         return bytes;
     }
 
-    public String getId() {
-        return id;
-    }
+    // public String getId() {
+    //     return id;
+    // }
 }
