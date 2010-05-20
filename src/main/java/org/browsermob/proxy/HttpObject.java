@@ -12,6 +12,9 @@ import java.util.Map;
 public class HttpObject {
     private int objectNum;
     private Date start;
+    // TODO: Bad things will happen in Blocks if this is not set.
+    // General problem of mutable object whose constructor does not
+    // fully construct.  FIX.
     private Date end;
     private long timeToFirstByte;
     private long timeToLastByte;

@@ -22,8 +22,7 @@ public class ProxyServer {
     private BrowserMobProxyHandler handler;
     private final int MAXBLOCKS = 100;
     private int port = 9638;
-    @GuardedBy("this")
-    private List<Block> blocks = new ArrayList<Block>();
+    private ProxyServerLog serverLog = new ProxyServerLog(MAXBLOCKS);
 
     public void start() throws Exception {
         server = new Server();
@@ -49,8 +48,8 @@ public class ProxyServer {
     }
 
     @RemoteMethod
-    public synchronized void clearBlocks() {
-        this.blocks.clear();
+    public void clearBlocks() {
+        serverLog.clearRecentBlocks();
     }
 
     @RemoteMethod
@@ -65,31 +64,17 @@ public class ProxyServer {
     }
 
     @RemoteMethod
-    public synchronized List<Block> getBlocks() {
-        return new ArrayList<Block>(blocks);
+    public List<Block> getBlocks() {
+        return serverLog.getRecentBlocks();
     }
 
     @RemoteMethod
     public synchronized List<Block> getLastNBlocks(int n) {
-        return new ArrayList<Block>(blocks.subList(0, n));
+        return serverLog.getLastNRecentBlocks(n);
     }
 
-    public synchronized void record(HttpObject httpObject) {
-        if (blocks.isEmpty()) {
-            // put in the first block
-            this.blocks.add(new Block());
-        }
-        
-        Block block = blocks.get(0);
-        if (!block.add(httpObject)) {
-            Block newBlock = new Block();
-            newBlock.add(httpObject);
-            blocks.add(0, newBlock);
-
-            if (blocks.size() > MAXBLOCKS) {
-                blocks.remove(MAXBLOCKS);
-            }
-        }
+    public void record(HttpObject httpObject) {
+        serverLog.record(httpObject);
     }
 
     public int getPort() {
@@ -108,5 +93,11 @@ public class ProxyServer {
     @RemoteMethod
     public MockResponse getMockResponse() {
         return handler.getMockResponse();
+    }
+
+
+    public ProxyServerLog getServerLog()  {
+        // returning mutable reference on purpose
+        return serverLog;
     }
 }
