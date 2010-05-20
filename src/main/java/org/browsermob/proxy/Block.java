@@ -18,8 +18,7 @@ public class Block {
     private long bytes;
     private List<HttpObject> objects = new ArrayList<HttpObject>();
 
-    // TODO: Why would this alone by synchronized?
-    public synchronized boolean add(HttpObject object) {
+    public boolean add(HttpObject object) {
         if (!allowed(object)) {
             return false;
         }
