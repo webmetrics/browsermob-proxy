@@ -2,6 +2,10 @@ package com.browsermob.core.har;
 
 import java.util.List;
 
+
+import org.codehaus.jackson.annotate.JsonWriteNullProperties;
+
+@JsonWriteNullProperties(value=false)
 public class HarPostData {
     private String mimeType;
     private List<HarPostDataParam> params;

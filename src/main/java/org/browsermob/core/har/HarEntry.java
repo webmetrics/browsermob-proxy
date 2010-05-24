@@ -3,9 +3,11 @@ package com.browsermob.core.har;
 import com.browsermob.core.json.ISO8601DateFormatter;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.codehaus.jackson.annotate.JsonWriteNullProperties;
 
 import java.util.Date;
 
+@JsonWriteNullProperties(value=false)
 @JsonAutoDetect
 public class HarEntry {
     private String pageref;

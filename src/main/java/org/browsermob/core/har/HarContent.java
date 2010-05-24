@@ -1,5 +1,8 @@
 package com.browsermob.core.har;
 
+import org.codehaus.jackson.annotate.JsonWriteNullProperties;
+
+@JsonWriteNullProperties(value=false)
 public class HarContent {
     private long size;
     private Long compression;

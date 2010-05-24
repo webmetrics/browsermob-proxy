@@ -3,6 +3,9 @@ package com.browsermob.core.har;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.codehaus.jackson.annotate.JsonWriteNullProperties;
+
+@JsonWriteNullProperties(value=false)
 public class HarLog {
     private String version = "1.1";
     private HarNameVersion creator;

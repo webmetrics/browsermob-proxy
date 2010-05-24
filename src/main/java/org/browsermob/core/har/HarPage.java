@@ -5,6 +5,9 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import java.util.Date;
 
+import org.codehaus.jackson.annotate.JsonWriteNullProperties;
+
+@JsonWriteNullProperties(value=false)
 public class HarPage {
     private String id;
     private Date startedDateTime;

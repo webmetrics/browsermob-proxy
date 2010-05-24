@@ -2,9 +2,11 @@ package com.browsermob.core.har;
 
 import com.browsermob.core.json.ISO8601DateFormatter;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.codehaus.jackson.annotate.JsonWriteNullProperties;
 
 import java.util.Date;
 
+@JsonWriteNullProperties(value=false)
 public class HarCacheStatus {
     private Date expires;
     private Date lastAccess;

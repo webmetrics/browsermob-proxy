@@ -2,6 +2,9 @@ package com.browsermob.core.har;
 
 import java.util.List;
 
+import org.codehaus.jackson.annotate.JsonWriteNullProperties;
+
+@JsonWriteNullProperties(value=false)
 public class HarRequest {
     private String method;
     private String url;
