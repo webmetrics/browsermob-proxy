@@ -1,6 +1,6 @@
 package com.browsermob.core.har;
 
-public class HarNameValuePair {
+public final class HarNameValuePair {
     private String name;
     private String value;
 
@@ -26,5 +26,20 @@ public class HarNameValuePair {
 
     public void setValue(String value) {
         this.value = value;
+    }
+
+    // TODO: Perhaps these should be done the right way
+    public boolean equals(Object o) {
+        HarNameValuePair obj = (HarNameValuePair)o;
+        return obj.getName().equals(this.getName()) && obj.getValue().equals(this.getValue());
+
+    }
+
+    public int hashCode() {
+        return toString().hashCode();
+    }
+
+    public String toString() {
+        return name + "=" + value;
     }
 }
