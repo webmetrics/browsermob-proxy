@@ -35,6 +35,7 @@ public class TestProxyServerLog {
         assertEquals("foo is foo", fooUrl, objs.get(0).getUrl().toString());
     }
 
+
     @Test
     public void singleNamedRecord() {
         ProxyServerLog serverLog = ps.getServerLog();

@@ -13,7 +13,7 @@ public class HarRequest {
     private List<HarNameValuePair> headers;
     private List<HarNameValuePair> queryString;
     private HarPostData postData;
-    private long headersSize;
+    private long headersSize; // Odd grammar in spec
     private long bodySize;
 
     public String getMethod() {

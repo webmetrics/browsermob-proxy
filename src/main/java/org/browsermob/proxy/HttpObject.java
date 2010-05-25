@@ -7,6 +7,7 @@ import java.util.Date;
 
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 @DataTransferObject
 public class HttpObject {
@@ -21,15 +22,17 @@ public class HttpObject {
     private long bytes;
     private String url;
     private int responseCode;
+    private String responseMessage;
     private String method;
     private String protocol;
+    private String protocalVersion;
     private String host;
     private String path;
     private String queryString;
     // headers, cookies
     // List<Map<String,String>> ?? best way to do it? all are ugly
     private Map<String,String> requestHeaders;
-    private Map<String,String> requestCookies;
+    //private Map<String,String> requestCookies; // Redundant with headers
     private Map<String,String> responseHeaders;
 
 
@@ -52,6 +55,14 @@ public class HttpObject {
 
     public void setResponseCode(int responseCode) {
         this.responseCode = responseCode;
+    }
+
+    public void setResponseMessage(String responseMessage) {
+        this.responseMessage = responseMessage;
+    }
+
+    public String getResponseMessage() {
+        return responseMessage;
     }
 
     public void setBytes(long bytes) {
@@ -102,6 +113,14 @@ public class HttpObject {
         return protocol;
     }
 
+    public String getProtocolVersion() {
+        return protocalVersion;
+    }
+
+    public void setProtocolVersion(String protocalVersion) {
+        this.protocalVersion = protocalVersion;
+    }
+
     public String getHost() {
         return host;
     }
@@ -127,6 +146,9 @@ public class HttpObject {
     }
 
     public Map<String,String> getResponseHeaders() {
+        if (responseHeaders == null) {
+            return new HashMap<String,String>();
+        }
         return responseHeaders;
     }
 
@@ -135,6 +157,9 @@ public class HttpObject {
     }
 
     public Map<String,String> getRequestHeaders() {
+        if (requestHeaders == null) {
+            return new HashMap<String,String>();
+        }
         return requestHeaders;
     }
 }

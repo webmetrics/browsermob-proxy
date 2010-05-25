@@ -215,6 +215,8 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
             httpObject.setTimeToFirstByte(ttfb);
             httpObject.setTimeToLastByte(ttlb);
             httpObject.setEnd(end);
+            httpObject.setProtocolVersion(request.getVersion());
+            httpObject.setResponseMessage(response.getReason());
 
             // ADD FUN HTTP STUFF HERE
             httpObject.setRequestHeaders(httpFieldsAsMap(request));
