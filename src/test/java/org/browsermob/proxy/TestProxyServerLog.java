@@ -48,7 +48,6 @@ public class TestProxyServerLog {
         assertEquals("foo is still foo", fooUrl, myobjs.get(0).getUrl().toString());
     }
 
-
     @Test
     public void multiNamedRecord() {
         ProxyServerLog serverLog = ps.getServerLog();

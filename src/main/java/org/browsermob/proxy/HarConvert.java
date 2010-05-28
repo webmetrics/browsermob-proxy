@@ -4,6 +4,7 @@ import java.util.Date;
 import java.net.URL;
 import java.net.MalformedURLException;
 import java.lang.RuntimeException;
+import java.lang.IllegalArgumentException;
 import java.net.HttpCookie;
 
 import java.util.Arrays;
@@ -22,9 +23,11 @@ import com.browsermob.core.har.HarNameVersion;
 import com.browsermob.core.har.HarPageTimings;
 import com.browsermob.core.har.HarRequest;
 import com.browsermob.core.har.HarResponse;
-
+import org.browsermob.proxy.util.Log;
 
 public class HarConvert {
+    private static final Log LOG = new Log();
+
     /** Turn an old list of blocks to a Har Archieve. Much left incomplete. */
     public static Har blocksToHar(List<Block> blocks) {
         List<HttpObject> httpObjects = ProxyBlockUtil.collapseBlocks(blocks);
@@ -69,6 +72,7 @@ public class HarConvert {
     }
 
 
+    // TODO: move to constructor?
     protected static HarCookie makeHarCookie(String name, String value) {
         HarCookie hc = new HarCookie();
 
@@ -76,6 +80,29 @@ public class HarConvert {
         hc.setValue(value);
 
         return hc;
+    }
+
+
+    // TODO: looks like these two methods could be generalized.
+    protected static List<HarCookie> parseRequesetCookieHeader(String cookieHeader) {
+        List<HarCookie> harCookies = new ArrayList<HarCookie>();
+        if (cookieHeader == null || cookieHeader.equals("")) {
+            return harCookies;
+        }
+        String[] pairs = cookieHeader.split(";");
+        for (String pair : pairs) {
+            if (pair.equals("")) {
+                continue;
+            }
+            String[] kv = pair.split("=");
+            if (kv.length == 2) {
+                harCookies.add(makeHarCookie(kv[0].trim(), kv[1].trim()));
+            }
+            else {
+                harCookies.add(makeHarCookie(pair.trim(), ""));
+            }
+        }
+        return harCookies;
     }
 
 
@@ -117,13 +144,10 @@ public class HarConvert {
         req.setHeadersSize(headerSize); // TODO: CL/LF and other details
 
         // TODO: only pickups first cookie, revist after request is checked
-        List<HarCookie> harCookies = new ArrayList<HarCookie>();
+        List<HarCookie> harCookies = new ArrayList<HarCookie>(); // correct use of optional and nulls?
         Map<String,String> reqHeaders = obj.getRequestHeaders();
         if (reqHeaders.containsKey("Cookie")) {
-            List<HttpCookie> cookies = HttpCookie.parse(reqHeaders.get("Cookie"));
-            for (HttpCookie cookie : cookies) {
-                harCookies.add(makeHarCookie(cookie));
-            }
+            harCookies = parseRequesetCookieHeader(reqHeaders.get("Cookie"));
         }
         req.setCookies(harCookies);
         URL url = null;
@@ -160,9 +184,14 @@ public class HarConvert {
         List<HarCookie> harCookies = new ArrayList<HarCookie>();
         Map<String,String> respHeaders = obj.getResponseHeaders();
         if (respHeaders.containsKey("Set-Cookie")) {
-            List<HttpCookie> cookies = HttpCookie.parse(respHeaders.get("Set-Cookie"));
-            for (HttpCookie cookie : cookies) {
-                harCookies.add(makeHarCookie(cookie));
+            try {
+                List<HttpCookie> cookies = HttpCookie.parse(respHeaders.get("Set-Cookie"));
+                for (HttpCookie cookie : cookies) {
+                    harCookies.add(makeHarCookie(cookie));
+                }
+            }
+            catch (IllegalArgumentException e) {
+                LOG.warn("Failed to parse response header cookies: " + respHeaders.get("Set-Cookie"));
             }
         }
         resp.setCookies(harCookies);

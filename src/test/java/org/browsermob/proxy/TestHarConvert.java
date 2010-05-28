@@ -65,6 +65,23 @@ public class TestHarConvert {
     }
 
 
+    // TODO write a bunch of assertions.
+    @Test
+    public void parseRequesetCookieHeaderBasic() throws java.io.IOException {
+        ObjectMapper mapper = new ObjectMapper(); // can reuse, share globally
+
+        String cookieHeader = "foo=bar; phpbb3_bkwcz_k=; style_cookie=null;;";
+        //List<HarCookie> expt = new ArrayList<HarCookie>();
+        //expt.add(HarConvert.makeHarCookie("foo", "bar"));
+        //expt.add(HarConvert.makeHarCookie("phpbb3_bkwcz_k", ""));
+        //expt.add(HarConvert.makeHarCookie("style_cookie", "null"));
+        List<HarCookie> cookies = HarConvert.parseRequesetCookieHeader(cookieHeader);
+        System.out.println(mapper.writeValueAsString(cookies));
+        //assertEquals("right number of cookies", expt, 
+        //assertEquals("foo", cookies.
+    }
+
+
     @Test
     public void makeHarRequestMinimal() throws MalformedURLException {
         HttpObject reqObj = new HttpObject(new Date(1274377224), new URL("http://foo.foo/foo"), "GET");
@@ -112,7 +129,7 @@ public class TestHarConvert {
         obj.setResponseHeaders(headers);
         HarResponse hresp = HarConvert.makeHarResponse(obj);
         System.out.println(mapper.writeValueAsString(hresp));
-        assertEquals("resp status", 200, hresp.getStatus());        
+        assertEquals("resp status", 200, hresp.getStatus());
     }
 
 
