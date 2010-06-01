@@ -1,13 +1,17 @@
 package org.browsermob.proxy;
 
-import org.directwebremoting.annotations.DataTransferObject;
-
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.Date;
-
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.zip.GZIPInputStream;
+
+import org.apache.commons.io.IOUtils;
+import org.directwebremoting.annotations.DataTransferObject;
 
 @DataTransferObject
 public class HttpObject {
@@ -34,6 +38,8 @@ public class HttpObject {
     private Map<String,String> requestHeaders;
     //private Map<String,String> requestCookies; // Redundant with headers
     private Map<String,String> responseHeaders;
+    private byte[] responseBytes;
+    private String responseString;
 
 
     public HttpObject() {
@@ -162,4 +168,32 @@ public class HttpObject {
         }
         return requestHeaders;
     }
+
+    public byte[] getResponseBytes() {
+        return responseBytes;
+    }
+
+    public String getResponseString() {
+        return responseString;
+    }
+
+    public void setResponseContent(byte[] bytes) {
+        responseBytes = bytes;
+        try {
+            responseString = new String(bytes, "UTF-8");
+        }
+        catch (UnsupportedEncodingException e) {
+            // leave null
+        }
+        try {
+            // java is ridiculous.  Attempt to unzip content.  Ignore deflate.
+            responseString = new String(IOUtils.toByteArray(new GZIPInputStream(new ByteArrayInputStream(responseBytes))), "UTF-8");
+        }
+        catch (IOException e) {
+            //e.printStackTrace();
+            // gunzip failed, left in original form
+        }
+    }
+
+
 }

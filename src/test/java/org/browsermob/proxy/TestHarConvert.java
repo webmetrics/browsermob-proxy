@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.HashMap;
 
 import com.browsermob.core.har.Har;
+import com.browsermob.core.har.HarContent;
 import com.browsermob.core.har.HarLog;
 import com.browsermob.core.har.HarEntry;
 import com.browsermob.core.har.HarCookie;
@@ -123,6 +124,7 @@ public class TestHarConvert {
         HttpObject obj = new HttpObject(new Date(1274377224), new URL("http://foo.foo/foo"), "GET");
         obj.setEnd(new Date(1274377224 + 1));
         obj.setResponseCode(200);
+        obj.setResponseContent(new String("hello").getBytes("UTF-8"));
         Map<String,String> headers = new HashMap<String,String>();
         headers.put("foo", "bar");
         headers.put("Set-Cookie", "GROUPS_SID=sid; Domain=groups.google.com; Path=/; HttpOnly");
@@ -130,6 +132,8 @@ public class TestHarConvert {
         HarResponse hresp = HarConvert.makeHarResponse(obj);
         System.out.println(mapper.writeValueAsString(hresp));
         assertEquals("resp status", 200, hresp.getStatus());
+        HarContent hContent = hresp.getContent();
+        assertEquals("hello echo", "hello", hContent.getText());
     }
 
 

@@ -196,8 +196,16 @@ public class HarConvert {
         }
         resp.setCookies(harCookies);
 
-        // TODO: dummy for now, stream fun
-        resp.setContent(new HarContent());
+        HarContent content = new HarContent();
+        if (obj.getResponseBytes() != null) {
+            content.setSize(obj.getResponseBytes().length);
+            if (respHeaders.containsKey("Content-Type")) {
+                content.setMimeType(respHeaders.get("Content-Type"));
+            }
+            content.setText(obj.getResponseString());
+        }
+        resp.setContent(content);
+
         resp.setBodySize(-1);
 
 

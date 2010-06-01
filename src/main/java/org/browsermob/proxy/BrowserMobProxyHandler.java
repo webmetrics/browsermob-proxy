@@ -172,7 +172,7 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
         request.setHandled(true);
         IOUtils.Stats outputStats = null;
         if (proxy_in != null) {
-            outputStats = IOUtils.copyWithStats(proxy_in, response.getOutputStream(), new BandwidthSimulator(controlRequest ? Integer.MAX_VALUE : simulatedBps), false);
+            outputStats = IOUtils.copyWithStats(proxy_in, response.getOutputStream(), new BandwidthSimulator(controlRequest ? Integer.MAX_VALUE : simulatedBps), true);
         }
 
         return new IOStats(inputStats, outputStats);
@@ -218,9 +218,18 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
             httpObject.setProtocolVersion(request.getVersion());
             httpObject.setResponseMessage(response.getReason());
 
-            // ADD FUN HTTP STUFF HERE
             httpObject.setRequestHeaders(httpFieldsAsMap(request));
             httpObject.setResponseHeaders(httpFieldsAsMap(response));
+
+            try {
+                // Class name conflict.
+                byte[] respBytes =  org.apache.commons.io.IOUtils.toByteArray(stats.getOutputStats().getCopy());
+                httpObject.setResponseContent(respBytes);
+            }
+            catch (IOException e) {
+                // TODO
+            }
+
             if (!controlRequest) {
                 proxyServer.record(httpObject);
             }
