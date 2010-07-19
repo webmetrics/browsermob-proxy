@@ -133,12 +133,20 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
             proxy_in = http.getErrorStream();
 
             try {
-                code = http.getResponseCode();
-            } catch (SSLHandshakeException e) {
-                throw new RuntimeException("Couldn't establish SSL handshake.  Try using trustAllSSLCertificates.\n" + e.getLocalizedMessage(), e);
+                try {
+                    code = http.getResponseCode();
+                } catch (SSLHandshakeException e) {
+                    throw new RuntimeException("Couldn't establish SSL handshake.  Try using trustAllSSLCertificates.\n" + e.getLocalizedMessage(), e);
+                }
+                response.setStatus(code);
+                response.setReason(http.getResponseMessage());
             }
-            response.setStatus(code);
-            response.setReason(http.getResponseMessage());
+            catch (Exception e) {
+                LOG.fine(e.getMessage(), e);
+                code = 0;
+                response.setStatus(code);
+                response.setReason("ERROR");
+            }
         }
 
         if (proxy_in == null) {
@@ -182,6 +190,8 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
     protected long proxyPlainTextRequest(URL url, String pathInContext, String pathParams, HttpRequest request, HttpResponse response) throws IOException {
         // this is for the control interface, so just do a vanilla proxy and don't simulate bandwidth, track objects, etc
         boolean controlRequest = url.getPort() == 8081 && url.getHost().equals("localhost");
+        Date start = new Date();
+        HttpObject httpObject = new HttpObject(start, url, request.getMethod());
 
         try {
             String urlStr = url.toString();
@@ -197,8 +207,6 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
                 return -1;
             }
 
-            Date start = new Date();
-            HttpObject httpObject = new HttpObject(start, url, request.getMethod());
             IOStats stats = customProxyPlainTextRequest(url, pathInContext, pathParams, request, response, controlRequest);
 
             long bytes = 0;
@@ -230,14 +238,15 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
                 // TODO
             }
 
-            if (!controlRequest) {
-                proxyServer.record(httpObject);
-            }
-
             return bytes;
         } catch (Exception e) {
             LOG.info("Exception while proxying data", e);
             throw new RuntimeException("Exception while proxying data", e);
+        }
+        finally {
+            if (!controlRequest) {
+                proxyServer.record(httpObject);
+            }
         }
     }
 
