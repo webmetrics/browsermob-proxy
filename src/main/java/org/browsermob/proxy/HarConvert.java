@@ -1,29 +1,15 @@
 package org.browsermob.proxy;
 
-import java.util.Date;
-import java.net.URL;
-import java.net.MalformedURLException;
-import java.lang.RuntimeException;
-import java.lang.IllegalArgumentException;
-import java.net.HttpCookie;
+import org.browsermob.core.har.*;
+import org.browsermob.proxy.util.Log;
 
-import java.util.Arrays;
+import java.net.HttpCookie;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
-
-import com.browsermob.core.har.Har;
-import com.browsermob.core.har.HarLog;
-import com.browsermob.core.har.HarEntry;
-import com.browsermob.core.har.HarCookie;
-import com.browsermob.core.har.HarContent;
-import com.browsermob.core.har.HarNameValuePair;
-import com.browsermob.core.har.HarNameVersion;
-import com.browsermob.core.har.HarPageTimings;
-import com.browsermob.core.har.HarRequest;
-import com.browsermob.core.har.HarResponse;
-import org.browsermob.proxy.util.Log;
 
 public class HarConvert {
     private static final Log LOG = new Log();

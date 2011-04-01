@@ -1,32 +1,14 @@
 package org.browsermob.proxy;
 
-import java.util.Date;
-import java.net.URL;
-import java.net.MalformedURLException;
-import java.lang.RuntimeException;
-import java.net.MalformedURLException;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-
-import com.browsermob.core.har.Har;
-import com.browsermob.core.har.HarContent;
-import com.browsermob.core.har.HarLog;
-import com.browsermob.core.har.HarEntry;
-import com.browsermob.core.har.HarCookie;
-import com.browsermob.core.har.HarNameValuePair;
-import com.browsermob.core.har.HarNameVersion;
-import com.browsermob.core.har.HarRequest;
-import com.browsermob.core.har.HarResponse;
-
+import org.browsermob.core.har.*;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.junit.Test;
 
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.*;
 
-import org.junit.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class TestHarConvert {
 

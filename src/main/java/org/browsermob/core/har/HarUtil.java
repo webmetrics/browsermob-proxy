@@ -1,4 +1,4 @@
-package com.browsermob.core.har;
+package org.browsermob.core.har;
 
 /** Handy things for working with har objects */
 public class HarUtil {

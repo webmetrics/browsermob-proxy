@@ -1,15 +1,14 @@
-package com.browsermob.core.har;
+package org.browsermob.core.har;
+
+import org.apache.commons.io.IOUtils;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.RuntimeException;
 
-import org.codehaus.jackson.map.ObjectMapper;
-
-import org.apache.commons.io.IOUtils;
-
-import org.junit.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 
 /** Test the basic importing of HAR as json.  No attempt at completeness is made here. */

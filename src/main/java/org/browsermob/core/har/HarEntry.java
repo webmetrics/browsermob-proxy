@@ -1,9 +1,9 @@
-package com.browsermob.core.har;
+package org.browsermob.core.har;
 
 import com.browsermob.core.json.ISO8601DateFormatter;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.codehaus.jackson.annotate.JsonWriteNullProperties;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import java.util.Date;
 

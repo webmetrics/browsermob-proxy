@@ -1,9 +1,9 @@
-package com.browsermob.core.har;
+package org.browsermob.core.har;
+
+import org.codehaus.jackson.annotate.JsonWriteNullProperties;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import org.codehaus.jackson.annotate.JsonWriteNullProperties;
 
 @JsonWriteNullProperties(value=false)
 public class HarLog {

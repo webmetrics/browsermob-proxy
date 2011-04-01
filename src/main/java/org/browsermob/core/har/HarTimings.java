@@ -1,4 +1,4 @@
-package com.browsermob.core.har;
+package org.browsermob.core.har;
 
 import org.codehaus.jackson.annotate.JsonWriteNullProperties;
 

@@ -1,8 +1,8 @@
-package com.browsermob.core.har;
-
-import java.util.List;
+package org.browsermob.core.har;
 
 import org.codehaus.jackson.annotate.JsonWriteNullProperties;
+
+import java.util.List;
 
 @JsonWriteNullProperties(value=false)
 public class HarRequest {

@@ -1,4 +1,4 @@
-package com.browsermob.core.har;
+package org.browsermob.core.har;
 
 public final class HarNameValuePair {
     private String name;
