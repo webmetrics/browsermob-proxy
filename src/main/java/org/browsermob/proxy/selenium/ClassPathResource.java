@@ -1,7 +1,7 @@
 package org.browsermob.proxy.selenium;
 
 import org.browsermob.proxy.jetty.util.Resource;
-import org.mortbay.util.IO;
+import org.eclipse.jetty.util.IO;
 
 import java.io.*;
 import java.net.MalformedURLException;

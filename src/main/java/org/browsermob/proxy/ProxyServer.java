@@ -1,21 +1,13 @@
 package org.browsermob.proxy;
 
-import net.jcip.annotations.GuardedBy;
-
-import com.google.inject.Singleton;
 import org.browsermob.proxy.jetty.http.HttpContext;
 import org.browsermob.proxy.jetty.http.SocketListener;
 import org.browsermob.proxy.jetty.jetty.Server;
 import org.browsermob.proxy.jetty.util.InetAddrPort;
-import org.directwebremoting.annotations.RemoteMethod;
-import org.directwebremoting.annotations.RemoteProxy;
 
-import java.util.ArrayList;
 import java.util.List;
 
 
-@Singleton
-@RemoteProxy
 public class ProxyServer {
     private Server server;
     private int bandwidth = 500; // KB/sec
@@ -47,28 +39,23 @@ public class ProxyServer {
         server.stop();
     }
 
-    @RemoteMethod
     public void clearBlocks() {
         serverLog.clearRecentBlocks();
     }
 
-    @RemoteMethod
     public int getBandwidth() {
         return bandwidth;
     }
 
-    @RemoteMethod
     public void setBandwidth(int bandwidth) {
         handler.setSimulatedBps(bandwidth * 1024 * 8); // convert to BPS
         this.bandwidth = bandwidth;
     }
 
-    @RemoteMethod
     public List<Block> getBlocks() {
         return serverLog.getRecentBlocks();
     }
 
-    @RemoteMethod
     public synchronized List<Block> getLastNBlocks(int n) {
         return serverLog.getLastNRecentBlocks(n);
     }
@@ -85,12 +72,10 @@ public class ProxyServer {
         this.port = port;
     }
 
-    @RemoteMethod
     public void setMockResponse(MockResponse mockResponse) {
         handler.setMockResponse(mockResponse);
     }
 
-    @RemoteMethod
     public MockResponse getMockResponse() {
         return handler.getMockResponse();
     }

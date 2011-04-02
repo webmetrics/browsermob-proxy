@@ -1,19 +1,16 @@
 package org.browsermob.proxy;
 
+import org.apache.commons.io.IOUtils;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
-import org.apache.commons.io.IOUtils;
-import org.directwebremoting.annotations.DataTransferObject;
-
-@DataTransferObject
 public class HttpObject {
     private int objectNum;
     private Date start;

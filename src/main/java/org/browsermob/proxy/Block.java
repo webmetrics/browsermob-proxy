@@ -1,14 +1,10 @@
 package org.browsermob.proxy;
 
-import org.browsermob.proxy.util.GUID;
-import org.directwebremoting.annotations.DataTransferObject;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 
-@DataTransferObject
 public class Block {
     // TODO: Is this needed at all?
     //private String id = GUID.generateGUID();

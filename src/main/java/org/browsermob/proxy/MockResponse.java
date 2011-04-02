@@ -1,13 +1,11 @@
 package org.browsermob.proxy;
 
 import org.browsermob.proxy.util.Log;
-import org.directwebremoting.annotations.DataTransferObject;
 
 import java.net.URL;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@DataTransferObject
 public class MockResponse {
     private static final Log LOG = new Log();
 

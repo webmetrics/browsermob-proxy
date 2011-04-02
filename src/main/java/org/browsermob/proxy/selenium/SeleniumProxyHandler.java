@@ -480,7 +480,7 @@ public abstract class SeleniumProxyHandler extends AbstractHttpHandler {
                 if (log.isDebugEnabled()) log.debug("chain proxy socket=" + chain_socket);
 
                 LineInput line_in = new LineInput(chain_socket.getInputStream());
-                byte[] connect = request.toString().getBytes(org.mortbay.util.StringUtil.__ISO_8859_1);
+                byte[] connect = request.toString().getBytes(StringUtil.__ISO_8859_1);
                 chain_socket.getOutputStream().write(connect);
 
                 String chain_response_line = line_in.readLine();
