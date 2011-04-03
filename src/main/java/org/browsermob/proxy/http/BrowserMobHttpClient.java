@@ -31,6 +31,8 @@ import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.ExecutionContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestExecutor;
+import org.browsermob.core.har.Har;
+import org.browsermob.core.har.HarEntry;
 import org.browsermob.proxy.util.CappedByteArrayOutputStream;
 import org.browsermob.proxy.util.ClonedInputStream;
 import org.browsermob.proxy.util.LockingChainingWriter;
@@ -53,14 +55,16 @@ public class BrowserMobHttpClient {
     private static final int BUFFER = 4096;
 
     private static final Log LOG = new Log();
-    private SimulatedSocketFactory socketFactory;
-    private TrustingSSLSocketFactory sslSocketFactory;
 
-    private ThreadSafeClientConnManager httpClientConnMgr;
-    private DefaultHttpClient httpClient;
     private TransactionStep activeStep;
     private Transaction activeTransaction;
-    private boolean stopped;
+    private Har har;
+    private String harPageRef;
+
+    private SimulatedSocketFactory socketFactory;
+    private TrustingSSLSocketFactory sslSocketFactory;
+    private ThreadSafeClientConnManager httpClientConnMgr;
+    private DefaultHttpClient httpClient;
     private List<BlacklistEntry> blacklistEntries = null;
     private WhitelistEntry whitelistEntry = null;
     private List<RewriteRule> rewriteRules = new CopyOnWriteArrayList<RewriteRule>();
@@ -321,6 +325,9 @@ public class BrowserMobHttpClient {
 
     private RuntimeException reportBadURI(String url, String method) {
         if (this.activeStep != null) {
+            HarEntry entry = new HarEntry();
+            har.getLog().addEntry(entry);
+
             TransactionStepObject obj = new TransactionStepObject(url, -998, method);
             obj.setStart(new Date());
             obj.setEnd(obj.getStart());

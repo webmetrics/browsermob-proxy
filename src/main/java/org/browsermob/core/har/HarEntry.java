@@ -18,6 +18,14 @@ public class HarEntry {
     private HarCache cache;
     private HarTimings timings;
 
+    public HarEntry() {
+    }
+
+    public HarEntry(String pageref, Date startedDateTime) {
+        this.pageref = pageref;
+        this.startedDateTime = startedDateTime;
+    }
+
     public String getPageref() {
         return pageref;
     }
