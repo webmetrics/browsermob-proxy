@@ -57,6 +57,10 @@ public class Transaction implements Serializable {
         this.success = success;
     }
 
+    public void setStepCount(int stepCount) {
+        this.stepCount = stepCount;
+    }
+
     public int getStepCount() {
         return stepCount;
     }

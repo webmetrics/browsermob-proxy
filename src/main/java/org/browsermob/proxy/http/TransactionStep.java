@@ -58,32 +58,8 @@ public class TransactionStep implements Serializable {
         this.objectCount = objectCount;
     }
 
-    public TransactionStepObject getFirstObject() {
-        TransactionStepObject match = null;
-        for (TransactionStepObject object : objects) {
-            if (match == null) {
-                match = object;
-            } else if (match.getStart().after(object.getStart())) {
-                match = object;
-            }
-        }
-
-        return match;
-    }
-
-    public TransactionStepObject getLastObject() {
-        TransactionStepObject match = null;
-        for (TransactionStepObject object : objects) {
-            if (object != null && object.getEnd() != null) {
-                if (match == null) {
-                    match = object;
-                } else if (object.getEnd().after(match.getEnd())) {
-                    match = object;
-                }
-            }
-        }
-
-        return match;
+    public void setObjects(List<TransactionStepObject> objects) {
+        this.objects = objects;
     }
 
     public List<TransactionStepObject> getObjects() {
