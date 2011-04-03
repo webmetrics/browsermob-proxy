@@ -1,4 +1,4 @@
-package com.browsermob.core.json;
+package org.browsermob.core.json;
 
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonGenerator;
