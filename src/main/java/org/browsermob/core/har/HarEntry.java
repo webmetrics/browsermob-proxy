@@ -2,12 +2,11 @@ package org.browsermob.core.har;
 
 import org.browsermob.core.json.ISO8601DateFormatter;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonWriteNullProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 import java.util.Date;
 
-@JsonWriteNullProperties(value=false)
+@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 @JsonAutoDetect
 public class HarEntry {
     private String pageref;
@@ -15,15 +14,15 @@ public class HarEntry {
     private long time;
     private HarRequest request;
     private HarResponse response;
-    private HarCache cache;
+    private HarCache cache = new HarCache();
     private HarTimings timings;
 
     public HarEntry() {
     }
 
-    public HarEntry(String pageref, Date startedDateTime) {
+    public HarEntry(String pageref) {
         this.pageref = pageref;
-        this.startedDateTime = startedDateTime;
+        this.startedDateTime = new Date();
     }
 
     public String getPageref() {

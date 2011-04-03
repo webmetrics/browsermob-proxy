@@ -1,5 +1,9 @@
 package org.browsermob.proxy;
 
+import org.browsermob.core.har.Har;
+import org.browsermob.core.har.HarLog;
+import org.browsermob.core.har.HarNameVersion;
+import org.browsermob.core.har.HarPage;
 import org.browsermob.proxy.http.BrowserMobHttpClient;
 import org.browsermob.proxy.http.Transaction;
 import org.browsermob.proxy.http.TransactionStep;
@@ -33,6 +37,10 @@ public class ProxyServer {
         TransactionStep step = new TransactionStep();
         transaction.addStep(step);
         client.setActiveStep(step);
+        client.setHar(new Har(new HarLog()));
+        client.getHar().getLog().setCreator(new HarNameVersion("BrowserMob Proxy", "2.0"));
+        client.getHar().getLog().addPage(new HarPage("PageRef_1"));
+        client.setHarPageRef("PageRef_1");
         client.prepareForBrowser();
         handler.setHttpClient(client);
         client.setDownstreamKbps(500 * 1024 * 8);
@@ -54,7 +62,7 @@ public class ProxyServer {
         this.port = port;
     }
 
-    public Transaction getTransaction() {
-        return client.getActiveTransaction();
+    public Har getHar() {
+        return client.getHar();
     }
 }

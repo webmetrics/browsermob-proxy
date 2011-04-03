@@ -1,5 +1,6 @@
 package org.browsermob.proxy.http;
 
+import org.browsermob.core.har.HarTimings;
 import org.browsermob.proxy.util.Log;
 
 import java.util.Date;
@@ -185,4 +186,7 @@ public class RequestInfo {
                 '}';
     }
 
+    public HarTimings getTimings() {
+        return new HarTimings(blocked, dns, connect, send, wait, receive);
+    }
 }

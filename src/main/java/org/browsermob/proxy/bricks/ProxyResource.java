@@ -9,9 +9,9 @@ import com.google.sitebricks.headless.Service;
 import com.google.sitebricks.http.Delete;
 import com.google.sitebricks.http.Get;
 import com.google.sitebricks.http.Post;
+import org.browsermob.core.har.Har;
 import org.browsermob.proxy.ProxyManager;
 import org.browsermob.proxy.ProxyServer;
-import org.browsermob.proxy.http.Transaction;
 
 @At("/proxy")
 @Service
@@ -33,10 +33,10 @@ public class ProxyResource {
 
     @Get
     @At("/:port/har")
-    public Reply<Transaction> getHar(@Named("port") int port) {
+    public Reply<Har> getHar(@Named("port") int port) {
         ProxyServer proxy = proxyManager.get(port);
 
-        return Reply.with(proxy.getTransaction()).as(Json.class);
+        return Reply.with(proxy.getHar()).as(Json.class);
     }
 
     @Delete

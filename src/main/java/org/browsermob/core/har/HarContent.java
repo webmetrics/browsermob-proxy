@@ -1,12 +1,12 @@
 package org.browsermob.core.har;
 
-import org.codehaus.jackson.annotate.JsonWriteNullProperties;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-@JsonWriteNullProperties(value=false)
+@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 public class HarContent {
     private long size;
     private Long compression;
-    private String mimeType;
+    private String mimeType = "";
     private String text;
 
     public long getSize() {

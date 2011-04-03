@@ -1,20 +1,30 @@
 package org.browsermob.core.har;
 
-import org.codehaus.jackson.annotate.JsonWriteNullProperties;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 
+import java.util.ArrayList;
 import java.util.List;
 
-@JsonWriteNullProperties(value=false)
+@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 public class HarResponse {
     private int status;
     private String statusText;
     private String httpVersion;
-    private List<HarCookie> cookies;
-    private List<HarNameValuePair> headers;
-    private HarContent content;
-    private String redirectURL;
+    private List<HarCookie> cookies = new ArrayList<HarCookie>();
+    private List<HarNameValuePair> headers = new ArrayList<HarNameValuePair>();
+    private HarContent content = new HarContent();
+    private String redirectURL = "";
     private long headersSize;
     private long bodySize;
+
+    public HarResponse() {
+    }
+
+    public HarResponse(int status, String statusText, String httpVersion) {
+        this.status = status;
+        this.statusText = statusText;
+        this.httpVersion = httpVersion;
+    }
 
     public int getStatus() {
         return status;

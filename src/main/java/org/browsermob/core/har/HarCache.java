@@ -1,8 +1,8 @@
 package org.browsermob.core.har;
 
-import org.codehaus.jackson.annotate.JsonWriteNullProperties;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-@JsonWriteNullProperties(value=false)
+@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 public class HarCache {
     private HarCacheStatus beforeRequest;
     private HarCacheStatus afterRequest;

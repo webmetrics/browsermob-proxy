@@ -1,20 +1,30 @@
 package org.browsermob.core.har;
 
-import org.codehaus.jackson.annotate.JsonWriteNullProperties;
+import org.codehaus.jackson.map.annotate.JsonSerialize;
 
+import java.util.ArrayList;
 import java.util.List;
 
-@JsonWriteNullProperties(value=false)
+@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 public class HarRequest {
     private String method;
     private String url;
     private String httpVersion;
-    private List<HarCookie> cookies;
-    private List<HarNameValuePair> headers;
-    private List<HarNameValuePair> queryString;
+    private List<HarCookie> cookies = new ArrayList<HarCookie>();
+    private List<HarNameValuePair> headers = new ArrayList<HarNameValuePair>();
+    private List<HarNameValuePair> queryString = new ArrayList<HarNameValuePair>();
     private HarPostData postData;
     private long headersSize; // Odd grammar in spec
     private long bodySize;
+
+    public HarRequest() {
+    }
+
+    public HarRequest(String method, String url, String httpVersion) {
+        this.method = method;
+        this.url = url;
+        this.httpVersion = httpVersion;
+    }
 
     public String getMethod() {
         return method;

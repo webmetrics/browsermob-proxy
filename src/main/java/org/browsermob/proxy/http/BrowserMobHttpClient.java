@@ -1,5 +1,8 @@
 package org.browsermob.proxy.http;
 
+import cz.mallat.uasparser.CachingOnlineUpdateUASparser;
+import cz.mallat.uasparser.UASparser;
+import cz.mallat.uasparser.UserAgentInfo;
 import org.apache.http.*;
 import org.apache.http.auth.*;
 import org.apache.http.client.CredentialsProvider;
@@ -31,8 +34,7 @@ import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.ExecutionContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestExecutor;
-import org.browsermob.core.har.Har;
-import org.browsermob.core.har.HarEntry;
+import org.browsermob.core.har.*;
 import org.browsermob.proxy.util.CappedByteArrayOutputStream;
 import org.browsermob.proxy.util.ClonedInputStream;
 import org.browsermob.proxy.util.LockingChainingWriter;
@@ -325,14 +327,12 @@ public class BrowserMobHttpClient {
 
     private RuntimeException reportBadURI(String url, String method) {
         if (this.activeStep != null) {
-            HarEntry entry = new HarEntry();
+            HarEntry entry = new HarEntry(harPageRef);
+            entry.setTime(0);
+            entry.setRequest(new HarRequest(method, url, "HTTP/1.1"));
+            entry.setResponse(new HarResponse(-998, "Bad URI", "HTTP/1.1"));
+            entry.setTimings(new HarTimings());
             har.getLog().addEntry(entry);
-
-            TransactionStepObject obj = new TransactionStepObject(url, -998, method);
-            obj.setStart(new Date());
-            obj.setEnd(obj.getStart());
-            obj.setErrorMessage("Bad URI");
-            this.activeStep.addObject(obj);
         }
 
         if (headerWriter != null) {
@@ -385,6 +385,25 @@ public class BrowserMobHttpClient {
         HttpRequestBase method = req.getMethod();
         String verificationText = req.getVerificationText();
         String url = method.getURI().toString();
+
+        // save the browser and version if it's not yet been set
+        if (har.getLog().getBrowser() == null) {
+            Header[] uaHeaders = method.getHeaders("User-Agent");
+            if (uaHeaders != null && uaHeaders.length > 0) {
+                String userAgent = uaHeaders[0].getValue();
+                try {
+                    UASparser p = new CachingOnlineUpdateUASparser();
+                    UserAgentInfo uai = p.parse(userAgent);
+                    String name = uai.getUaName();
+                    int lastSpace = name.lastIndexOf(' ');
+                    String browser = name.substring(0, lastSpace);
+                    String version = name.substring(lastSpace + 1);
+                    har.getLog().setBrowser(new HarNameVersion(browser, version));
+                } catch (IOException e) {
+                    // ignore it, it's fine
+                }
+            }
+        }
 
         // process any rewrite requests
         boolean rewrote = false;
@@ -450,6 +469,11 @@ public class BrowserMobHttpClient {
 
         // link the object up now, before we make the request, so that if we get cut off (ie: favicon.ico request and browser shuts down)
         // we still have the attempt associated, even if we never got a response
+        HarEntry entry = new HarEntry(harPageRef);
+        entry.setRequest(new HarRequest(method.getMethod(), url, method.getProtocolVersion().getProtocol()));
+        entry.setResponse(new HarResponse(-999, "INTERNAL STATE", method.getProtocolVersion().getProtocol()));
+        har.getLog().addEntry(entry);
+
         TransactionStepObject obj = new TransactionStepObject(url, -999, method.getMethod());
         if (activeStep != null) {
             activeStep.addObject(obj);
@@ -460,7 +484,7 @@ public class BrowserMobHttpClient {
 
         BasicHttpContext ctx = new BasicHttpContext();
 
-        ActiveRequest activeRequest = new ActiveRequest(method, ctx, obj.getStart());
+        ActiveRequest activeRequest = new ActiveRequest(method, ctx, entry.getStartedDateTime());
         synchronized (activeRequests) {
             activeRequests.add(activeRequest);
         }
@@ -473,6 +497,7 @@ public class BrowserMobHttpClient {
             ctx.setAttribute("preemptive-auth", new BasicScheme());
         }
 
+        StatusLine statusLine = null;
         try {
             // set the User-Agent if it's not already set
             if (method.getHeaders("User-Agent").length == 0) {
@@ -504,10 +529,11 @@ public class BrowserMobHttpClient {
                 });
             } else {
                 response = httpClient.execute(method, ctx);
-                statusCode = response.getStatusLine().getStatusCode();
+                statusLine = response.getStatusLine();
+                statusCode = statusLine.getStatusCode();
 
                 if (callback != null) {
-                    callback.handleStatusLine(response.getStatusLine());
+                    callback.handleStatusLine(statusLine);
                     callback.handleHeaders(response.getAllHeaders());
                 }
 
@@ -558,8 +584,11 @@ public class BrowserMobHttpClient {
         RequestInfo.get().finish();
 
         // set the start and end times
+        entry.setStartedDateTime(RequestInfo.get().getStart());
         obj.setStart(RequestInfo.get().getStart());
         obj.setEnd(RequestInfo.get().getEnd());
+
+        entry.setTimings(RequestInfo.get().getTimings());
 
         // was there blocked time?
         if (RequestInfo.get().getBlocked() != null) {
@@ -595,10 +624,15 @@ public class BrowserMobHttpClient {
         }
 
         // record the total time
+        entry.setTime(RequestInfo.get().getTotalTime());
         obj.setTimeActive(RequestInfo.get().getTotalTime());
 
+        // todo: where you store this in HAR?
         obj.setErrorMessage(errorMessage);
+        entry.getResponse().setBodySize(bytes);
         obj.setBytes(bytes);
+        entry.getResponse().setStatus(statusCode);
+        entry.getResponse().setStatusText(statusLine.getReasonPhrase());
         obj.setStatusCode(statusCode);
 
         if (activeStep != null) {
@@ -658,7 +692,7 @@ public class BrowserMobHttpClient {
 
 
                     if (response != null) {
-                        headerWriter.append(response.getStatusLine().toString()).append("\n");
+                        headerWriter.append(statusLine.toString()).append("\n");
                         for (Header header : response.getAllHeaders()) {
                             // if there is a callback, ask if we should report it.
                             // We do this because it may not have handled all of the headers, so we'll defer to it
@@ -852,6 +886,14 @@ public class BrowserMobHttpClient {
         }
     }
 
+    public void setHar(Har har) {
+        this.har = har;
+    }
+
+    public void setHarPageRef(String harPageRef) {
+        this.harPageRef = harPageRef;
+    }
+
     public void setActiveStep(TransactionStep activStep) {
         this.activeStep = activStep;
     }
@@ -961,6 +1003,10 @@ public class BrowserMobHttpClient {
 
     public Transaction getActiveTransaction() {
         return activeTransaction;
+    }
+
+    public Har getHar() {
+        return har;
     }
 
     static class PreemptiveAuth implements HttpRequestInterceptor {
