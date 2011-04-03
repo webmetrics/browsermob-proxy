@@ -1,5 +1,6 @@
 package org.browsermob.proxy;
 
+import org.browsermob.proxy.http.BrowserMobHttpClient;
 import org.browsermob.proxy.jetty.http.HttpContext;
 import org.browsermob.proxy.jetty.http.SocketListener;
 import org.browsermob.proxy.jetty.jetty.Server;
@@ -15,6 +16,7 @@ public class ProxyServer {
     private final int MAXBLOCKS = 100;
     private int port = 9638;
     private ProxyServerLog serverLog = new ProxyServerLog(MAXBLOCKS);
+    private BrowserMobHttpClient client;
 
     public void start() throws Exception {
         server = new Server();
@@ -25,9 +27,11 @@ public class ProxyServer {
 
         handler = new BrowserMobProxyHandler();
         handler.setShutdownLock(new Object());
-        handler.setSimulatedBps(bandwidth * 1024 * 8);
-        handler.setProxyServer(this);
-        
+        client = new BrowserMobHttpClient(null);
+        client.prepareForBrowser();
+        handler.setHttpClient(client);
+        client.setDownstreamKbps(bandwidth * 1024 * 8);
+
         context.addHandler(handler);
 
         clearBlocks();
@@ -48,7 +52,7 @@ public class ProxyServer {
     }
 
     public void setBandwidth(int bandwidth) {
-        handler.setSimulatedBps(bandwidth * 1024 * 8); // convert to BPS
+        client.setDownstreamKbps(bandwidth * 1024 * 8);
         this.bandwidth = bandwidth;
     }
 
@@ -70,14 +74,6 @@ public class ProxyServer {
 
     public void setPort(int port) {
         this.port = port;
-    }
-
-    public void setMockResponse(MockResponse mockResponse) {
-        handler.setMockResponse(mockResponse);
-    }
-
-    public MockResponse getMockResponse() {
-        return handler.getMockResponse();
     }
 
 

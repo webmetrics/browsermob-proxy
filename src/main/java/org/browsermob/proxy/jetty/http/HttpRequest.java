@@ -1226,4 +1226,8 @@ public class HttpRequest extends HttpMessage
             return null;
         }
     };
+
+    public void setURI(URI uri) {
+        _uri = uri;
+    }
 }
