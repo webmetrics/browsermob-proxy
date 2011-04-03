@@ -15,6 +15,7 @@ public class TransactionStep implements Serializable {
     private long timeActive;
 
     public TransactionStep() {
+        start = new Date();
     }
 
     public int getStep() {

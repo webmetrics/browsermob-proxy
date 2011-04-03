@@ -19,14 +19,18 @@ public class ProxyManager {
         this.proxyServerProvider = proxyServerProvider;
     }
 
-    public int create() throws Exception {
+    public ProxyServer create() throws Exception {
         int port = portCounter.incrementAndGet();
         ProxyServer proxy = proxyServerProvider.get();
         proxy.setPort(port);
         proxy.start();
         proxies.put(port, proxy);
 
-        return port;
+        return proxy;
+    }
+
+    public ProxyServer get(int port) {
+        return proxies.get(port);
     }
 
     public void delete(int port) throws Exception {

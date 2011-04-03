@@ -952,6 +952,10 @@ public class BrowserMobHttpClient {
         return hostNameResolver.original(host);
     }
 
+    public Transaction getActiveTransaction() {
+        return activeTransaction;
+    }
+
     static class PreemptiveAuth implements HttpRequestInterceptor {
         public void process(
                 final HttpRequest request,

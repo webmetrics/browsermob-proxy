@@ -1,15 +1,20 @@
 package org.browsermob.proxy.http;
 
+import org.codehaus.jackson.annotate.JsonIgnore;
+
+import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+@XmlRootElement
 public class Transaction implements Serializable {
     protected Date start;
     protected Date end;
     protected long bytes;
     protected boolean success;
+    @JsonIgnore
     protected String sourceIPAddress;
     protected int objectCount;
     protected int stepCount;
@@ -17,6 +22,7 @@ public class Transaction implements Serializable {
     protected long timeActive;
 
     public Transaction() {
+        start = new Date();
     }
 
     public Date getStart() {
@@ -81,6 +87,7 @@ public class Transaction implements Serializable {
         this.bytes += bytes;
     }
 
+    @JsonIgnore
     public String getSourceIPAddress() {
         return sourceIPAddress;
     }

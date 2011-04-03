@@ -1,6 +1,7 @@
 package org.browsermob.proxy;
 
 import com.google.inject.Inject;
+import org.browsermob.proxy.http.Transaction;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -18,8 +19,18 @@ public class ProxyResource {
     @POST
     @Produces({MediaType.APPLICATION_JSON})
     public ProxyDescriptor newProxy() throws Exception {
-        int port = proxyManager.create();
+        ProxyServer proxy = proxyManager.create();
+        int port = proxy.getPort();
+
         return new ProxyDescriptor(port);
+    }
+
+    @GET
+    @Produces({MediaType.APPLICATION_JSON})
+    @Path("/{port}/har")
+    public Transaction getHar(@PathParam("port") int port) {
+        ProxyServer proxy = proxyManager.get(port);
+        return proxy.getTransaction();
     }
 
     @DELETE
