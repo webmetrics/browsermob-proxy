@@ -10,8 +10,15 @@ public class HarLog {
     private String version = "1.1";
     private HarNameVersion creator;
     private HarNameVersion browser;
-    private List<HarPage> pages;
-    private List<HarEntry> entries;
+    private List<HarPage> pages = new ArrayList<HarPage>();
+    private List<HarEntry> entries = new ArrayList<HarEntry>();
+
+    public HarLog() {
+    }
+
+    public HarLog(HarNameVersion creator) {
+        this.creator = creator;
+    }
 
     public void addPage(HarPage page) {
         if (pages == null) {

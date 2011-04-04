@@ -35,6 +35,7 @@ public class ProxyResource {
     @At("/:port/har")
     public Reply<Har> getHar(@Named("port") int port) {
         ProxyServer proxy = proxyManager.get(port);
+        Har har = proxy.getHar();
 
         return Reply.with(proxy.getHar()).as(Json.class);
     }

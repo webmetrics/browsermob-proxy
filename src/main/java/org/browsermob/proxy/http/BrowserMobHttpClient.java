@@ -36,7 +36,6 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestExecutor;
 import org.browsermob.core.har.*;
 import org.browsermob.proxy.util.CappedByteArrayOutputStream;
-import org.browsermob.proxy.util.LockingChainingWriter;
 import org.browsermob.proxy.util.Log;
 import org.xbill.DNS.Cache;
 import org.xbill.DNS.DClass;
@@ -74,7 +73,6 @@ public class BrowserMobHttpClient {
     private WhitelistEntry whitelistEntry = null;
     private List<RewriteRule> rewriteRules = new CopyOnWriteArrayList<RewriteRule>();
     private int requestTimeout;
-    private LockingChainingWriter headerWriter;
     private AtomicBoolean allowNewRequests = new AtomicBoolean(true);
     private BrowserMobHostNameResolver hostNameResolver;
     private boolean decompress = true;
@@ -88,9 +86,7 @@ public class BrowserMobHttpClient {
     private boolean followRedirects = true;
     private static final int MAX_REDIRECT = 10;
 
-    public BrowserMobHttpClient(LockingChainingWriter headerWriter) {
-        this.headerWriter = headerWriter;
-
+    public BrowserMobHttpClient() {
         HttpParams params = new BasicHttpParams();
 
         // MOB-338: 30 total connections and 6 connections per host matches the behavior in Firefox 3
@@ -230,7 +226,7 @@ public class BrowserMobHttpClient {
     public BrowserMobHttpRequest newPost(String url) {
         try {
             URI uri = makeUri(url);
-            return new BrowserMobHttpRequest(new HttpPost(uri), this, -1, headerWriter != null);
+            return new BrowserMobHttpRequest(new HttpPost(uri), this, -1, captureContent);
         } catch (URISyntaxException e) {
             throw reportBadURI(url, "POST");
         }
@@ -239,7 +235,7 @@ public class BrowserMobHttpClient {
     public BrowserMobHttpRequest newGet(String url) {
         try {
             URI uri = makeUri(url);
-            return new BrowserMobHttpRequest(new HttpGet(uri), this, -1, headerWriter != null);
+            return new BrowserMobHttpRequest(new HttpGet(uri), this, -1, captureContent);
         } catch (URISyntaxException e) {
             throw reportBadURI(url, "GET");
         }
@@ -248,7 +244,7 @@ public class BrowserMobHttpClient {
     public BrowserMobHttpRequest newPut(String url) {
         try {
             URI uri = makeUri(url);
-            return new BrowserMobHttpRequest(new HttpPut(uri), this, -1, headerWriter != null);
+            return new BrowserMobHttpRequest(new HttpPut(uri), this, -1, captureContent);
         } catch (Exception e) {
             throw reportBadURI(url, "PUT");
         }
@@ -257,7 +253,7 @@ public class BrowserMobHttpClient {
     public BrowserMobHttpRequest newDelete(String url) {
         try {
             URI uri = makeUri(url);
-            return new BrowserMobHttpRequest(new HttpDelete(uri), this, -1, headerWriter != null);
+            return new BrowserMobHttpRequest(new HttpDelete(uri), this, -1, captureContent);
         } catch (URISyntaxException e) {
             throw reportBadURI(url, "DELETE");
         }
@@ -266,7 +262,7 @@ public class BrowserMobHttpClient {
     public BrowserMobHttpRequest newOptions(String url) {
         try {
             URI uri = makeUri(url);
-            return new BrowserMobHttpRequest(new HttpOptions(uri), this, -1, headerWriter != null);
+            return new BrowserMobHttpRequest(new HttpOptions(uri), this, -1, captureContent);
         } catch (URISyntaxException e) {
             throw reportBadURI(url, "OPTIONS");
         }
@@ -275,7 +271,7 @@ public class BrowserMobHttpClient {
     public BrowserMobHttpRequest newHead(String url) {
         try {
             URI uri = makeUri(url);
-            return new BrowserMobHttpRequest(new HttpHead(uri), this, -1, headerWriter != null);
+            return new BrowserMobHttpRequest(new HttpHead(uri), this, -1, captureContent);
         } catch (URISyntaxException e) {
             throw reportBadURI(url, "HEAD");
         }
@@ -329,28 +325,13 @@ public class BrowserMobHttpClient {
     }
 
     private RuntimeException reportBadURI(String url, String method) {
-        if (this.har != null) {
+        if (this.har != null && harPageRef != null) {
             HarEntry entry = new HarEntry(harPageRef);
             entry.setTime(0);
             entry.setRequest(new HarRequest(method, url, "HTTP/1.1"));
             entry.setResponse(new HarResponse(-998, "Bad URI", "HTTP/1.1"));
             entry.setTimings(new HarTimings());
             har.getLog().addEntry(entry);
-        }
-
-        if (headerWriter != null) {
-            headerWriter.lock();
-            try {
-                try {
-                    headerWriter.append(url).append("\n");
-                    headerWriter.append("Error: Bad URI\n");
-                    headerWriter.append("----------------------------------------------------------\n");
-                } catch (IOException e) {
-                    LOG.warn("Problem writing out headers", e);
-                }
-            } finally {
-                headerWriter.unlock();
-            }
         }
 
         throw new BadURIException("Bad URI requested: " + url);
@@ -390,7 +371,7 @@ public class BrowserMobHttpClient {
         String url = method.getURI().toString();
 
         // save the browser and version if it's not yet been set
-        if (har.getLog().getBrowser() == null) {
+        if (har != null && har.getLog().getBrowser() == null) {
             Header[] uaHeaders = method.getHeaders("User-Agent");
             if (uaHeaders != null && uaHeaders.length > 0) {
                 String userAgent = uaHeaders[0].getValue();
@@ -475,7 +456,9 @@ public class BrowserMobHttpClient {
         HarEntry entry = new HarEntry(harPageRef);
         entry.setRequest(new HarRequest(method.getMethod(), url, method.getProtocolVersion().getProtocol()));
         entry.setResponse(new HarResponse(-999, "INTERNAL STATE", method.getProtocolVersion().getProtocol()));
-        har.getLog().addEntry(entry);
+        if (this.har != null && harPageRef != null) {
+            har.getLog().addEntry(entry);
+        }
 
         String errorMessage = null;
         HttpResponse response = null;
@@ -590,6 +573,7 @@ public class BrowserMobHttpClient {
         // todo: where you store this in HAR?
         // obj.setErrorMessage(errorMessage);
         entry.getResponse().setBodySize(bytes);
+        entry.getResponse().getContent().setSize(bytes);
         entry.getResponse().setStatus(statusCode);
         entry.getResponse().setStatusText(statusLine.getReasonPhrase());
 
@@ -610,7 +594,7 @@ public class BrowserMobHttpClient {
             }
         }
 
-        /*
+        /* TODO
         if (captureContent) {
             // can we understand the POST data at all?
             if (method instanceof HttpEntityEnclosingRequestBase && req.getCopy() != null) {
@@ -655,7 +639,7 @@ public class BrowserMobHttpClient {
 
         String contentType = null;
 
-        if (response != null && os instanceof ByteArrayOutputStream) {
+        if (response != null) {
             try {
                 Header contentTypeHdr = response.getFirstHeader("Content-Type");
                 if (contentTypeHdr != null) {
@@ -667,14 +651,20 @@ public class BrowserMobHttpClient {
                     }
                 }
 
-                responseBody = ((ByteArrayOutputStream) os).toString(charSet);
+                if (os instanceof ByteArrayOutputStream) {
+                    responseBody = ((ByteArrayOutputStream) os).toString(charSet);
 
-                if (verificationText != null) {
-                    contentMatched = responseBody.contains(verificationText);
+                    if (verificationText != null) {
+                        contentMatched = responseBody.contains(verificationText);
+                    }
                 }
             } catch (UnsupportedEncodingException e) {
                 throw new RuntimeException(e);
             }
+        }
+
+        if (contentType != null) {
+            entry.getResponse().getContent().setMimeType(contentType);
         }
 
         // checking to see if the client is being redirected
@@ -992,14 +982,6 @@ public class BrowserMobHttpClient {
 
     public void setDNSCacheTimeout(int timeout) {
         this.hostNameResolver.setCacheTimeout(timeout);
-    }
-
-    public LockingChainingWriter getHeaderWriter() {
-        return headerWriter;
-    }
-
-    public void setHeaderWriter(LockingChainingWriter headerWriter) {
-        this.headerWriter = headerWriter;
     }
 
     public static long copyWithStats(InputStream is, OutputStream os) throws IOException {

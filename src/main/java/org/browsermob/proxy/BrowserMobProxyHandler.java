@@ -37,7 +37,7 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
         HttpContext context = new HttpContext(server, "/");
         BrowserMobProxyHandler proxy = new BrowserMobProxyHandler();
         proxy.setJettyServer(server);
-        final BrowserMobHttpClient c = new BrowserMobHttpClient(null);
+        final BrowserMobHttpClient c = new BrowserMobHttpClient();
         c.remapHost("www.clarksusa.com", "209.202.184.11");
 //        c.remapHost("cookbooks.opscode.com", "184.73.163.128");
 //        c.remapHost("wwwpre.opscode.com", "184.73.163.128");
