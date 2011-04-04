@@ -187,6 +187,21 @@ public class RequestInfo {
     }
 
     public HarTimings getTimings() {
+        long send = 0;
+        if (this.send != null) {
+            send = this.send;
+        }
+
+        long wait = 0;
+        if (this.wait != null) {
+            wait = this.wait;
+        }
+
+        long receive = 0;
+        if (this.receive != null) {
+            receive = this.receive;
+        }
+
         return new HarTimings(blocked, dns, connect, send, wait, receive);
     }
 }
