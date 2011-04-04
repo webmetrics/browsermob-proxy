@@ -285,13 +285,13 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
                 }
             });
 
-            BrowserMobHttpResponse httpRes = (BrowserMobHttpResponse) httpReq.execute();
+            BrowserMobHttpResponse httpRes = httpReq.execute();
 
             // ALWAYS mark the request as handled if we actually handled it. Otherwise, Jetty will think non 2xx responses
             // mean it wasn't actually handled, resulting in totally valid 304 Not Modified requests turning in to 404 responses
             // from Jetty. NOT good :(
             request.setHandled(true);
-            return httpRes.getInfo().getBytes();
+            return httpRes.getEntry().getResponse().getBodySize();
         } catch (BadURIException e) {
             // this is a known error case (see MOB-93)
             LOG.info(e.getMessage());

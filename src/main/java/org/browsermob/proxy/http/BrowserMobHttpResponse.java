@@ -3,11 +3,12 @@ package org.browsermob.proxy.http;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.browsermob.core.har.HarEntry;
 
 public class BrowserMobHttpResponse {
+    private HarEntry entry;
     private HttpRequestBase method;
     private HttpResponse response;
-    private TransactionStepObject info;
     private boolean contentMatched;
     private String verificationText;
     private String errorMessage;
@@ -15,10 +16,10 @@ public class BrowserMobHttpResponse {
     private String contentType;
     private String charSet;
 
-    public BrowserMobHttpResponse(HttpRequestBase method, HttpResponse response, TransactionStepObject info, boolean contentMatched, String verificationText, String errorMessage, String body, String contentType, String charSet) {
+    public BrowserMobHttpResponse(HarEntry entry, HttpRequestBase method, HttpResponse response, boolean contentMatched, String verificationText, String errorMessage, String body, String contentType, String charSet) {
+        this.entry = entry;
         this.method = method;
         this.response = response;
-        this.info = info;
         this.contentMatched = contentMatched;
         this.verificationText = verificationText;
         this.errorMessage = errorMessage;
@@ -29,10 +30,6 @@ public class BrowserMobHttpResponse {
 
     public boolean isContentMatched() {
         return contentMatched;
-    }
-
-    public TransactionStepObject getInfo() {
-        return info;
     }
 
     public String getBody() {
@@ -68,5 +65,9 @@ public class BrowserMobHttpResponse {
         if (!isContentMatched()) {
             throw new RuntimeException("Content match failure. Expected '" + verificationText + "'." + (info != null ? " " + info : ""));
         }
+    }
+
+    public HarEntry getEntry() {
+        return entry;
     }
 }

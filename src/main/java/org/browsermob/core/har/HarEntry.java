@@ -16,6 +16,7 @@ public class HarEntry {
     private HarResponse response;
     private HarCache cache = new HarCache();
     private HarTimings timings;
+    private String serverIPAddress;
 
     public HarEntry() {
     }
@@ -80,5 +81,13 @@ public class HarEntry {
 
     public void setTimings(HarTimings timings) {
         this.timings = timings;
+    }
+
+    public String getServerIPAddress() {
+        return serverIPAddress;
+    }
+
+    public void setServerIPAddress(String serverIPAddress) {
+        this.serverIPAddress = serverIPAddress;
     }
 }

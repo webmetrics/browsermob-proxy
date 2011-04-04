@@ -36,7 +36,6 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestExecutor;
 import org.browsermob.core.har.*;
 import org.browsermob.proxy.util.CappedByteArrayOutputStream;
-import org.browsermob.proxy.util.ClonedInputStream;
 import org.browsermob.proxy.util.LockingChainingWriter;
 import org.browsermob.proxy.util.Log;
 import org.xbill.DNS.Cache;
@@ -45,7 +44,10 @@ import org.xbill.DNS.DClass;
 import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -58,10 +60,11 @@ public class BrowserMobHttpClient {
 
     private static final Log LOG = new Log();
 
-    private TransactionStep activeStep;
-    private Transaction activeTransaction;
     private Har har;
     private String harPageRef;
+
+    private boolean captureHeaders;
+    private boolean captureContent;
 
     private SimulatedSocketFactory socketFactory;
     private TrustingSSLSocketFactory sslSocketFactory;
@@ -326,7 +329,7 @@ public class BrowserMobHttpClient {
     }
 
     private RuntimeException reportBadURI(String url, String method) {
-        if (this.activeStep != null) {
+        if (this.har != null) {
             HarEntry entry = new HarEntry(harPageRef);
             entry.setTime(0);
             entry.setRequest(new HarRequest(method, url, "HTTP/1.1"));
@@ -474,11 +477,6 @@ public class BrowserMobHttpClient {
         entry.setResponse(new HarResponse(-999, "INTERNAL STATE", method.getProtocolVersion().getProtocol()));
         har.getLog().addEntry(entry);
 
-        TransactionStepObject obj = new TransactionStepObject(url, -999, method.getMethod());
-        if (activeStep != null) {
-            activeStep.addObject(obj);
-        }
-
         String errorMessage = null;
         HttpResponse response = null;
 
@@ -583,158 +581,37 @@ public class BrowserMobHttpClient {
         // record the response as ended
         RequestInfo.get().finish();
 
-        // set the start and end times
+        // set the start time and other timings
         entry.setStartedDateTime(RequestInfo.get().getStart());
-        obj.setStart(RequestInfo.get().getStart());
-        obj.setEnd(RequestInfo.get().getEnd());
-
         entry.setTimings(RequestInfo.get().getTimings());
-
-        // was there blocked time?
-        if (RequestInfo.get().getBlocked() != null) {
-            obj.setBlockedTime(RequestInfo.get().getBlocked());
-        }
-
-        // was there a DNS lookup?
-        if (RequestInfo.get().getDns() != null) {
-            obj.setDnsLookupTime(RequestInfo.get().getDns());
-        }
-        obj.setResolvedIpAddress(RequestInfo.get().getResolvedAddress());
-
-        // was there a connect time measured?
-        if (RequestInfo.get().getConnect() != null) {
-            obj.setConnectTime(RequestInfo.get().getConnect());
-        }
-
-        // was there an SSL handshaking time measured?
-        if (RequestInfo.get().getSsl() != null) {
-            obj.setSslHandshakeTime(RequestInfo.get().getSsl());
-        }
-
-        // was there a wait/TTFB time measured?
-        if (RequestInfo.get().getWait() != null) {
-            obj.setTimeToFirstByte(RequestInfo.get().getWait());
-        }
-
-        // was there a receive time measured? There should be since it gets set on RequestInfo.finish()
-        if (RequestInfo.get().getReceive() != null) {
-            obj.setReceiveTime(RequestInfo.get().getReceive());
-        } else {
-            LOG.warn("No receive time for %s", url);
-        }
-
-        // record the total time
+        entry.setServerIPAddress(RequestInfo.get().getResolvedAddress());
         entry.setTime(RequestInfo.get().getTotalTime());
-        obj.setTimeActive(RequestInfo.get().getTotalTime());
 
         // todo: where you store this in HAR?
-        obj.setErrorMessage(errorMessage);
+        // obj.setErrorMessage(errorMessage);
         entry.getResponse().setBodySize(bytes);
-        obj.setBytes(bytes);
         entry.getResponse().setStatus(statusCode);
         entry.getResponse().setStatusText(statusLine.getReasonPhrase());
-        obj.setStatusCode(statusCode);
 
-        if (activeStep != null) {
-            activeStep.addBytes(bytes);
-        }
-
-        if (activeTransaction != null) {
-            activeTransaction.addBytes(bytes);
-        }
-
-        if (headerWriter != null) {
-            headerWriter.lock();
-            try {
-                // OK, the request is done, we got the headers. Let's write them out immediately and then clear
-                // the data out so we're not using up more memory than necessary
-                try {
-                    headerWriter.append(obj.getUrl()).append("\n");
-                    if (obj.getErrorMessage() != null) {
-                        headerWriter.append("Error: ").append(obj.getErrorMessage()).append("\n");
-                    }
-                    headerWriter.append("Response time: ").append(obj.getTimeActive()).append(" ms (TTFB ").append(obj.getTimeToFirstByte()).append(" ms)\n");
-                    if (obj.getResolvedIpAddress() != null) {
-                        headerWriter.append("DNS: ").append(obj.getResolvedIpAddress()).append(" (").append(obj.getDnsLookupTime()).append(" ms)\n");
-                    }
-
-                    headerWriter.append("\n");
-                    headerWriter.append(obj.getMethod()).append(" ").append(obj.getPath());
-                    if (obj.getQueryString() != null) {
-                        headerWriter.append("?").append(obj.getQueryString());
-                    }
-                    headerWriter.append(" HTTP/1.1\n");
-
-                    HttpRequest request = (HttpRequest) ctx.getAttribute(ExecutionContext.HTTP_REQUEST);
-                    if (request != null) {
-                        for (Header header : request.getAllHeaders()) {
-                            headerWriter.append(header.getName()).append(": ").append(header.getValue()).append("\n");
-                        }
-                    }
-
-                    headerWriter.append("\n");
-
-                    if (method instanceof HttpEntityEnclosingRequestBase) {
-                        HttpEntity e = ((HttpEntityEnclosingRequestBase) method).getEntity();
-                        if (e != null) {
-                            try {
-                                InputStream content = e.getContent();
-                                if (content != null && content instanceof ClonedInputStream) {
-                                    byte[] output = ((ClonedInputStream) content).getOutput().toByteArray();
-                                    headerWriter.append(new String(output)).append("\n");
-                                    headerWriter.append("\n");
-                                }
-                            } catch (Exception ignore) {
-                                // fine, it's not critical we have this, let it go
-                            }
-                        }
-                    }
-
-
-                    if (response != null) {
-                        headerWriter.append(statusLine.toString()).append("\n");
-                        for (Header header : response.getAllHeaders()) {
-                            // if there is a callback, ask if we should report it.
-                            // We do this because it may not have handled all of the headers, so we'll defer to it
-                            if (callback != null && !callback.reportHeader(header)) {
-                                continue;
-                            }
-
-                            headerWriter.append(header.getName()).append(": ").append(header.getValue()).append("\n");
-                        }
-                    }
-
-                    headerWriter.append("----------------------------------------------------------\n");
-                } catch (IOException e) {
-                    // we are going to ignore these problems for now...
-                    //LOG.warn("Problem writing out headers", e);
-                }
-            } finally {
-                headerWriter.unlock();
-            }
-        }
-
-        // capture content in memory?
-        if (false) {
-            boolean urlEncoded = false;
-            HashMap<String, String[]> requestHeaders = new HashMap<String, String[]>();
+        boolean urlEncoded = false;
+        if (captureHeaders || captureContent) {
             for (Header header : method.getAllHeaders()) {
                 if (header.getValue() != null && header.getValue().startsWith(URLEncodedUtils.CONTENT_TYPE)) {
                     urlEncoded = true;
                 }
 
-                requestHeaders.put(header.getName(), new String[]{header.getValue()});
+                entry.getRequest().getHeaders().add(new HarNameValuePair(header.getName(), header.getValue()));
             }
-            obj.setRequestHeaders(requestHeaders);
 
             if (response != null) {
-                HashMap<String, String[]> responseHeaders = new HashMap<String, String[]>();
                 for (Header header : response.getAllHeaders()) {
-                    responseHeaders.put(header.getName(), new String[]{header.getValue()});
+                    entry.getResponse().getHeaders().add(new HarNameValuePair(header.getName(), header.getValue()));
                 }
-                obj.setResponseHeaders(responseHeaders);
             }
+        }
 
+        /*
+        if (captureContent) {
             // can we understand the POST data at all?
             if (method instanceof HttpEntityEnclosingRequestBase && req.getCopy() != null) {
                 HttpEntityEnclosingRequestBase enclosingReq = (HttpEntityEnclosingRequestBase) method;
@@ -774,6 +651,7 @@ public class BrowserMobHttpClient {
                 }
             }
         }
+        */
 
         String contentType = null;
 
@@ -863,7 +741,7 @@ public class BrowserMobHttpClient {
             }
         }
 
-        return new BrowserMobHttpResponse(method, response, obj, contentMatched, verificationText, errorMessage, responseBody, contentType, charSet);
+        return new BrowserMobHttpResponse(entry, method, response, contentMatched, verificationText, errorMessage, responseBody, contentType, charSet);
     }
 
     public void shutdown() {
@@ -892,14 +770,6 @@ public class BrowserMobHttpClient {
 
     public void setHarPageRef(String harPageRef) {
         this.harPageRef = harPageRef;
-    }
-
-    public void setActiveStep(TransactionStep activStep) {
-        this.activeStep = activStep;
-    }
-
-    public void setActiveTransaction(Transaction activeTransaction) {
-        this.activeTransaction = activeTransaction;
     }
 
     public void setDownstreamKbps(long downstreamKbps) {
@@ -1001,12 +871,16 @@ public class BrowserMobHttpClient {
         return hostNameResolver.original(host);
     }
 
-    public Transaction getActiveTransaction() {
-        return activeTransaction;
-    }
-
     public Har getHar() {
         return har;
+    }
+
+    public void setCaptureHeaders(boolean captureHeaders) {
+        this.captureHeaders = captureHeaders;
+    }
+
+    public void setCaptureContent(boolean captureContent) {
+        this.captureContent = captureContent;
     }
 
     static class PreemptiveAuth implements HttpRequestInterceptor {
