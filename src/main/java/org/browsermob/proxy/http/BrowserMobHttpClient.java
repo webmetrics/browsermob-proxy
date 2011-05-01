@@ -1005,6 +1005,7 @@ public class BrowserMobHttpClient {
                 if (length != -1) {
                     bytesCopied += length;
                     os.write(buffer, 0, length);
+                    os.flush();
                 }
             } while (length != -1);
         } finally {
