@@ -5,55 +5,113 @@
     <artifactId>browsermob-proxy</artifactId>
     <version>2.0-SNAPSHOT</version>
     <name>BrowserMob Proxy</name>
+    <description>A programmatic HTTP/S designed for performance and functional testing</description>
+    <url>http://proxy.browsermob.com</url>
     <packaging>jar</packaging>
+
+    <parent>
+      <groupId>org.sonatype.oss</groupId>
+      <artifactId>oss-parent</artifactId>
+      <version>7</version>
+    </parent>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Patrick Lightbody</name>
+            <email>patrick@lightbody.net</email>
+            <url>http://lightbody.net</url>
+            <organization>BrowserMob</organization>
+            <organizationUrl>http://browsermob.com</organizationUrl>
+            <timezone>PST</timezone>
+            <roles>
+                <role>Administrator</role>
+            </roles>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git@github.com:lightbody/browsermob-proxy.git</connection>
+        <developerConnection>scm:git:git@github.com:lightbody/browsermob-proxy.git</developerConnection>
+        <url>git@github.com:lightbody/browsermob-proxy.git</url>
+    </scm>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    </properties>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>appassembler-maven-plugin</artifactId>
+                        <version>1.1.1</version>
+                        <configuration>
+                            <repositoryLayout>flat</repositoryLayout>
+                            <repositoryName>lib</repositoryName>
+                            <programs>
+                                <program>
+                                    <mainClass>org.browsermob.proxy.Main</mainClass>
+                                    <name>browsermob-proxy</name>
+                                </program>
+                            </programs>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>make-assembly</id>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>assemble</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>make-assembly</id>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
     <build>
         <defaultGoal>install</defaultGoal>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
                 <configuration>
                     <source>1.6</source>
                     <target>1.6</target>
                 </configuration>
             </plugin>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <descriptors>
-                        <descriptor>src/main/assembly/assembly.xml</descriptor>
-                    </descriptors>
-                    <archive>
-                        <manifest>
-                            <mainClass>org.browsermob.proxy.Main</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id>
-                        <!-- this is used for inheritance merges -->
-                        <phase>package</phase>
-                        <!-- append to the packaging phase. -->
-                        <goals>
-                            <goal>single</goal>
-                            <!-- goals == mojos -->
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <!--<plugin>-->
-            <!--<artifactId>maven-assembly-plugin</artifactId>-->
-            <!--<configuration>-->
-            <!--<descriptor>src/main/assembly/assembly.xml</descriptor>-->
-            <!--&lt;!&ndash;<descriptorId>jar-with-dependencies</descriptorId>&ndash;&gt;-->
-            <!--<archive>-->
-            <!--<manifest>-->
-            <!--<mainClass>org.browsermob.proxy.MainnClass>-->
-            <!--</manifest>-->
-            <!--</archive>-->
-            <!--</configuration>-->
-            <!--</plugin>-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
@@ -67,13 +125,6 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-war-plugin</artifactId>
-                <version>2.1-beta-1</version>
-                <configuration>
-                    <attachClasses>true</attachClasses>
-                </configuration>
             </plugin>
         </plugins>
     </build>
