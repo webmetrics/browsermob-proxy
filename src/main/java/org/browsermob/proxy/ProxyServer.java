@@ -11,6 +11,7 @@ import org.browsermob.proxy.jetty.http.HttpContext;
 import org.browsermob.proxy.jetty.http.SocketListener;
 import org.browsermob.proxy.jetty.jetty.Server;
 import org.browsermob.proxy.jetty.util.InetAddrPort;
+import org.openqa.selenium.Proxy;
 
 import java.util.Date;
 
@@ -52,6 +53,15 @@ public class ProxyServer {
         context.addHandler(handler);
 
         server.start();
+    }
+
+    public org.openqa.selenium.Proxy seleniumProxy() {
+        Proxy proxy = new Proxy();
+        proxy.setProxyType(Proxy.ProxyType.MANUAL);
+        proxy.setHttpProxy("localhost:4444");
+        proxy.setSslProxy("localhost:4444");
+
+        return proxy;
     }
 
     public void cleanup() {

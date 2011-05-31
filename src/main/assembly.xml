@@ -3,12 +3,23 @@
           xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
     <id>bin</id>
     <formats>
-        <format>tar.gz</format>
         <format>zip</format>
     </formats>
     <fileSets>
         <fileSet>
             <directory>${project.basedir}/target/appassembler</directory>
+            <outputDirectory>/</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/src/main/resources/sslSupport</directory>
+            <outputDirectory>/ssl-support</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/target</directory>
+            <includes>
+                <include>browsermob-proxy-${project.version}-sources.jar</include>
+                <include>browsermob-proxy-${project.version}-javadoc.jar</include>
+            </includes>
             <outputDirectory>/</outputDirectory>
         </fileSet>
     </fileSets>
