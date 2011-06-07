@@ -58,8 +58,9 @@ public class ProxyServer {
     public org.openqa.selenium.Proxy seleniumProxy() {
         Proxy proxy = new Proxy();
         proxy.setProxyType(Proxy.ProxyType.MANUAL);
-        proxy.setHttpProxy("localhost:4444");
-        proxy.setSslProxy("localhost:4444");
+        String proxyStr = String.format("localhost:%d", getPort());
+        proxy.setHttpProxy(proxyStr);
+        proxy.setSslProxy(proxyStr);
 
         return proxy;
     }
