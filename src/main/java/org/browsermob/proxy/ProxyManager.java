@@ -2,8 +2,8 @@ package org.browsermob.proxy;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.Provider;
 
-import javax.inject.Provider;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
