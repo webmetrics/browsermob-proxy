@@ -1,12 +1,9 @@
 package org.browsermob.core.har;
 
-import org.codehaus.jackson.annotate.JsonWriteNullProperties;
-
-@JsonWriteNullProperties(value=false)
 public class HarTimings {
-    private Long blocked;
-    private Long dns;
-    private Long connect;
+    private long blocked;
+    private long dns;
+    private long connect;
     private long send;
     private long wait;
     private long receive;
@@ -14,7 +11,7 @@ public class HarTimings {
     public HarTimings() {
     }
 
-    public HarTimings(Long blocked, Long dns, Long connect, long send, long wait, long receive) {
+    public HarTimings(long blocked, long dns, long connect, long send, long wait, long receive) {
         this.blocked = blocked;
         this.dns = dns;
         this.connect = connect;
