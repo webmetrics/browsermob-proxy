@@ -49,6 +49,11 @@ public class ProxyResource {
         ProxyServer proxy = proxyManager.get(port);
         Har oldHar = proxy.newHar(initialPageRef);
 
+        String captureHeaders = request.param("captureHeaders");
+        String captureContent = request.param("captureContent");
+        proxy.setCaptureHeaders(Boolean.parseBoolean(captureHeaders));
+        proxy.setCaptureContent(Boolean.parseBoolean(captureContent));
+
         if (oldHar != null) {
             return Reply.with(oldHar).as(Json.class);
         } else {
@@ -66,10 +71,70 @@ public class ProxyResource {
         return Reply.saying().ok();
     }
 
+    @Put
+    @At("/:port/blacklist")
+    public Reply<?> blacklist(@Named("port") int port, Request request) {
+        String blacklist = request.param("regex");
+        int responseCode = parseResponseCode(request.param("status"));
+        ProxyServer proxy = proxyManager.get(port);
+        proxy.blacklistRequests(blacklist, responseCode);
+
+        return Reply.saying().ok();
+    }
+
+    @Put
+    @At("/:port/whitelist")
+    public Reply<?> whitelist(@Named("port") int port, Request request) {
+        String regex = request.param("regex");
+        int responseCode = parseResponseCode(request.param("status"));
+        ProxyServer proxy = proxyManager.get(port);
+        proxy.whitelistRequests(regex.split(","), responseCode);
+
+        return Reply.saying().ok();
+    }
+
+
+    @Put
+    @At("/:port/limit")
+    public Reply<?> limit(@Named("port") int port, Request request) {
+        ProxyServer proxy = proxyManager.get(port);
+        String upstreamKbps = request.param("upstreamKbps");
+        if (upstreamKbps != null) {
+            try {
+                proxy.setUpstreamKbps(Integer.parseInt(upstreamKbps));
+            } catch (NumberFormatException e) { }
+        }
+        String downstreamKbps = request.param("downstreamKbps");
+        if (downstreamKbps != null) {
+            try {
+                proxy.setDownstreamKbps(Integer.parseInt(downstreamKbps));
+            } catch (NumberFormatException e) { }
+        }
+        String latency = request.param("latency");
+        if (latency != null) {
+            try {
+                proxy.setLatency(Integer.parseInt(latency));
+            } catch (NumberFormatException e) { }
+        }
+        return Reply.saying().ok();
+    }
+
     @Delete
     @At("/:port")
-    public void delete(@Named("port") int port) throws Exception {
+    public Reply<?> delete(@Named("port") int port) throws Exception {
         proxyManager.delete(port);
+        return Reply.saying().ok();
+    }
+
+    private int parseResponseCode(String response)
+    {
+        int responseCode = 200;
+        if (response != null) {
+            try {
+                responseCode = Integer.parseInt(response);
+            } catch (NumberFormatException e) { }
+        }
+        return responseCode;
     }
 
     public static class ProxyDescriptor {
@@ -90,5 +155,4 @@ public class ProxyResource {
             this.port = port;
         }
     }
-
 }
