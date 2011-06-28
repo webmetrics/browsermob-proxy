@@ -37,6 +37,8 @@ import org.apache.http.protocol.HttpRequestExecutor;
 import org.browsermob.core.har.*;
 import org.browsermob.proxy.util.CappedByteArrayOutputStream;
 import org.browsermob.proxy.util.Log;
+import org.eclipse.jetty.util.MultiMap;
+import org.eclipse.jetty.util.UrlEncoded;
 import org.xbill.DNS.Cache;
 import org.xbill.DNS.DClass;
 
@@ -458,6 +460,14 @@ public class BrowserMobHttpClient {
         entry.setResponse(new HarResponse(-999, "INTERNAL STATE", method.getProtocolVersion().getProtocol()));
         if (this.har != null && harPageRef != null) {
             har.getLog().addEntry(entry);
+        }
+        
+        MultiMap<String> params = new MultiMap<String>();
+        UrlEncoded.decodeTo(method.getURI().getQuery(), params, "UTF-8");
+        for (String k : params.keySet()) {
+        	for (Object v : params.getValues(k)) {
+        		entry.getRequest().getQueryString().add(new HarNameValuePair(k, (String) v));	
+        	}
         }
 
         String errorMessage = null;
