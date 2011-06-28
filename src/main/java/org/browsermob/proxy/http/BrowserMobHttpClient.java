@@ -462,12 +462,15 @@ public class BrowserMobHttpClient {
             har.getLog().addEntry(entry);
         }
         
-        MultiMap<String> params = new MultiMap<String>();
-        UrlEncoded.decodeTo(method.getURI().getQuery(), params, "UTF-8");
-        for (String k : params.keySet()) {
-        	for (Object v : params.getValues(k)) {
-        		entry.getRequest().getQueryString().add(new HarNameValuePair(k, (String) v));	
-        	}
+    	String query = method.getURI().getQuery();
+    	if (query != null) {
+	        MultiMap<String> params = new MultiMap<String>();
+	        UrlEncoded.decodeTo(query, params, "UTF-8");
+	        for (String k : params.keySet()) {
+	        	for (Object v : params.getValues(k)) {
+	        		entry.getRequest().getQueryString().add(new HarNameValuePair(k, (String) v));
+	        	}
+	        }
         }
 
         String errorMessage = null;
