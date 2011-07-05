@@ -15,8 +15,6 @@ import org.apache.http.protocol.HTTP;
 import org.browsermob.proxy.util.Base64;
 import org.browsermob.proxy.util.ClonedInputStream;
 import org.browsermob.proxy.util.Log;
-import sun.org.mozilla.javascript.internal.NativeArray;
-import sun.org.mozilla.javascript.internal.NativeObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -63,22 +61,6 @@ public class BrowserMobHttpRequest {
         method.addHeader(key, value);
     }
 
-    public void addRequestHeaders(NativeObject headersNO) {
-        if (headersNO != null) {
-            for (Object o : headersNO.getAllIds()) {
-                Object val = headersNO.get(o.toString(), null);
-                if (val instanceof NativeArray) {
-                    NativeArray arr = (NativeArray) val;
-                    for (int i = 0; i < arr.getLength(); i++) {
-                        method.addHeader(o.toString(), arr.get(i, null).toString());
-                    }
-                } else {
-                    method.addHeader(o.toString(), val.toString());
-                }
-            }
-        }
-    }
-
     public void addRequestParameter(String key, String value) {
         nvps.add(new BasicNameValuePair(key, value));
     }
@@ -103,22 +85,6 @@ public class BrowserMobHttpRequest {
 
     public void setRequestBodyAsBase64EncodedBytes(String bodyBase64Encoded) {
         byteArrayEntity = new ByteArrayEntity(Base64.base64ToByteArray(bodyBase64Encoded));
-    }
-
-    public void addRequestParameters(NativeObject paramsNO) {
-        if (paramsNO != null) {
-            for (Object o : paramsNO.getAllIds()) {
-                Object val = paramsNO.get(o.toString(), null);
-                if (val instanceof NativeArray) {
-                    NativeArray arr = (NativeArray) val;
-                    for (int i = 0; i < arr.getLength(); i++) {
-                        addRequestParameter(o.toString(), arr.get(i, null).toString());
-                    }
-                } else {
-                    addRequestParameter(o.toString(), val.toString());
-                }
-            }
-        }
     }
 
     public void setRequestInputStream(InputStream is, long length) {
