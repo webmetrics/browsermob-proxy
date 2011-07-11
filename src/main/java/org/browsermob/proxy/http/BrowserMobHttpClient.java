@@ -5,6 +5,7 @@ import cz.mallat.uasparser.UASparser;
 import cz.mallat.uasparser.UserAgentInfo;
 import org.apache.http.*;
 import org.apache.http.auth.*;
+import org.apache.http.client.CookieStore;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.*;
 import org.apache.http.client.params.ClientPNames;
@@ -22,6 +23,7 @@ import org.apache.http.conn.scheme.SchemeRegistry;
 import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.cookie.*;
 import org.apache.http.impl.auth.BasicScheme;
+import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
@@ -387,6 +389,8 @@ public class BrowserMobHttpClient {
                     har.getLog().setBrowser(new HarNameVersion(browser, version));
                 } catch (IOException e) {
                     // ignore it, it's fine
+                } catch (Exception e) {
+                	LOG.warn("Failed to parse user agent string", e);
                 }
             }
         }
@@ -477,6 +481,8 @@ public class BrowserMobHttpClient {
         HttpResponse response = null;
 
         BasicHttpContext ctx = new BasicHttpContext();
+        CookieStore cookieStore = new BasicCookieStore();
+        ctx.setAttribute(ClientContext.COOKIE_STORE, cookieStore);
 
         ActiveRequest activeRequest = new ActiveRequest(method, ctx, entry.getStartedDateTime());
         synchronized (activeRequests) {
@@ -742,6 +748,17 @@ public class BrowserMobHttpClient {
             } catch (URISyntaxException e) {
                 LOG.warn("Could not parse URL", e);
             }
+        }
+        
+        List<Cookie> cookies = cookieStore.getCookies();
+        for (Cookie c : cookies) {
+        	HarCookie hc = new HarCookie();
+        	hc.setName(c.getName());
+        	hc.setPath(c.getPath());
+        	hc.setValue(c.getValue());
+        	hc.setDomain(c.getDomain());
+        	hc.setExpires(c.getExpiryDate());
+        	entry.getRequest().getCookies().add(hc);
         }
 
         return new BrowserMobHttpResponse(entry, method, response, contentMatched, verificationText, errorMessage, responseBody, contentType, charSet);
