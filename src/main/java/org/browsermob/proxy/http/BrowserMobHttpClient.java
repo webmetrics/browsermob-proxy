@@ -461,7 +461,7 @@ public class BrowserMobHttpClient {
         // we still have the attempt associated, even if we never got a response
         HarEntry entry = new HarEntry(harPageRef);
         entry.setRequest(new HarRequest(method.getMethod(), url, method.getProtocolVersion().getProtocol()));
-        entry.setResponse(new HarResponse(-999, "INTERNAL STATE", method.getProtocolVersion().getProtocol()));
+        entry.setResponse(new HarResponse(-999, "NO RESPONSE", method.getProtocolVersion().getProtocol()));
         if (this.har != null && harPageRef != null) {
             har.getLog().addEntry(entry);
         }
@@ -594,7 +594,9 @@ public class BrowserMobHttpClient {
         entry.getResponse().setBodySize(bytes);
         entry.getResponse().getContent().setSize(bytes);
         entry.getResponse().setStatus(statusCode);
-        entry.getResponse().setStatusText(statusLine.getReasonPhrase());
+        if (statusLine != null) {
+            entry.getResponse().setStatusText(statusLine.getReasonPhrase());
+        }
 
         boolean urlEncoded = false;
         if (captureHeaders || captureContent) {

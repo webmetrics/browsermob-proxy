@@ -202,6 +202,25 @@ public class RequestInfo {
             receive = this.receive;
         }
 
+        // We were setting the following to null, however
+        // some HAR viewers (e.g. the HTTP Archive Viewer js widget)
+        // have a problem when these are not set in the json.
+        // Keeping them set to zero for now, until
+        long blocked = 0;
+        if (this.blocked != null) {
+            blocked = this.blocked;
+        }
+
+        long dns = 0;
+        if (this.dns != null) {
+            dns = this.dns;
+        }
+
+        long connect = 0;
+        if (this.connect != null) {
+            receive = this.connect;
+        }
+
         return new HarTimings(blocked, dns, connect, send, wait, receive);
     }
 }
