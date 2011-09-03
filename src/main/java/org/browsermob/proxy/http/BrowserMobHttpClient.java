@@ -387,6 +387,8 @@ public class BrowserMobHttpClient {
                     har.getLog().setBrowser(new HarNameVersion(browser, version));
                 } catch (IOException e) {
                     // ignore it, it's fine
+                } catch (Exception e) {
+                	LOG.warn("Failed to parse user agent string", e);
                 }
             }
         }
@@ -651,6 +653,11 @@ public class BrowserMobHttpClient {
             }
         }
         */
+        
+        //capture request cookies
+        CookieHeadersParser cookieParser = new CookieHeadersParser();
+        List<HarCookie> cookies = cookieParser.getCookies(method); 
+        entry.getRequest().setCookies(cookies);
 
         String contentType = null;
 
@@ -676,6 +683,10 @@ public class BrowserMobHttpClient {
             } catch (UnsupportedEncodingException e) {
                 throw new RuntimeException(e);
             }
+            
+            //capture response cookies            
+            cookies = cookieParser.getCookies(response); 
+            entry.getResponse().setCookies(cookies);
         }
 
         if (contentType != null) {
@@ -745,6 +756,7 @@ public class BrowserMobHttpClient {
                 LOG.warn("Could not parse URL", e);
             }
         }
+        
 
         return new BrowserMobHttpResponse(entry, method, response, contentMatched, verificationText, errorMessage, responseBody, contentType, charSet);
     }
