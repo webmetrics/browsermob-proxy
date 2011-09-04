@@ -30,24 +30,6 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
     private BrowserMobHttpClient httpClient;
     protected final Set<SslRelay> sslRelays = new HashSet<SslRelay>();
 
-
-    public static void main(String[] args) throws Exception {
-        Server server = new Server();
-        server.addListener(new SocketListener(new InetAddrPort(4444)));
-        HttpContext context = new HttpContext(server, "/");
-        BrowserMobProxyHandler proxy = new BrowserMobProxyHandler();
-        proxy.setJettyServer(server);
-        final BrowserMobHttpClient c = new BrowserMobHttpClient();
-        c.remapHost("www.clarksusa.com", "209.202.184.11");
-//        c.remapHost("cookbooks.opscode.com", "184.73.163.128");
-//        c.remapHost("wwwpre.opscode.com", "184.73.163.128");
-        c.prepareForBrowser();
-        proxy.setHttpClient(c);
-        context.addHandler(proxy);
-        server.addContext(context);
-        server.start();
-    }
-
     public BrowserMobProxyHandler() {
         super(true, "", "", false, false);
         setShutdownLock(new Object());
