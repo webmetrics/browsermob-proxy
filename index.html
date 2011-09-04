@@ -3,12 +3,12 @@
 <head>
   <meta charset='utf-8'>
 
-  <title>webmetrics/browsermob-proxy @ GitHub</title>
+  <title>BrowserMob Proxy, by Neustar Webmetrics</title>
 
   <style type="text/css">
     body {
       margin-top: 1.0em;
-      background-color: #71c96b;
+      background-color: #c0c0c0;
       font-family: Helvetica, Arial, FreeSans, san-serif;
       color: #000000;
     }
@@ -16,12 +16,12 @@
       margin: 0 auto;
       width: 700px;
     }
-    h1 { font-size: 3.8em; color: #8e3694; margin-bottom: 3px; }
+    h1 { font-size: 3.8em; color: #000; margin-bottom: 3px; }
     h1 .small { font-size: 0.4em; }
     h1 a { text-decoration: none }
-    h2 { font-size: 1.5em; color: #8e3694; }
-    h3 { text-align: center; color: #8e3694; }
-    a { color: #8e3694; }
+    h2 { font-size: 1.5em; color: #000; }
+    h3 { text-align: center; color: #000; }
+    a { color: #00e; }
     .description { font-size: 1.2em; margin-bottom: 30px; margin-top: 30px; font-style: italic;}
     .download { float: right; }
     pre { background: #000; color: #fff; padding: 15px;}
@@ -35,51 +35,84 @@
 
   <div id="container">
 
-    <div class="download">
-      <a href="http://github.com/webmetrics/browsermob-proxy/zipball/master">
-        <img border="0" width="90" src="http://github.com/images/modules/download/zip.png"></a>
-      <a href="http://github.com/webmetrics/browsermob-proxy/tarball/master">
-        <img border="0" width="90" src="http://github.com/images/modules/download/tar.png"></a>
-    </div>
+<div class="download">
+  <a href="https://github.com/webmetrics/browsermob-proxy/downloads">
+    <img border="0" width="90" src="http://github.com/images/modules/download/zip.png"></a>
+</div>
 
-    <h1><a href="http://github.com/webmetrics/browsermob-proxy">browsermob-proxy</a>
-      <span class="small">by <a href="http://github.com/webmetrics">webmetrics</a></span></h1>
+<h1><a href="http://github.com/webmetrics/browsermob-proxy">browsermob-proxy</a>
+  <span class="small"><br/>by <a href="http://github.com/webmetrics">Webmetrics</a></span></h1>
 
-    <div class="description">
-      A free utility to help web developers watch and manipulate network traffic from their web applications.
-    </div>
+<div class="description">
+  A free utility to help web developers watch and manipulate network traffic from their web applications.
+</div>
 
-    <p>BrowserMob proxy is based on technology developed in the <a href="http://seleniumhq.org/">Selenium open source project</a> and the commercial <a href="https://browsermob.com/">load testing and monitoring service, BrowserMob</a>. 
+<p>
+  BrowserMob proxy is based on technology developed in the <a href="http://seleniumhq.org/">Selenium open source project</a> and the commercial <a href="https://browsermob.com/">load testing and monitoring service, BrowserMob</a>. 
+</p>
 
-The proxy is a free (Apache 2.0 license) utility that works well with Selenium or can be used independently. It can capture performance data for web apps (via the <a href="http://groups.google.com/group/http-archive-specification/web/har-1-1-spec">HAR format</a>), as well as manipulate browser behavior and traffic, such as whitelisting and blacklisting content, simulating network traffic and latency, and rewriting HTTP requests and responses.</p><h2>Dependencies</h2>
-<p>None if running as standalone proxy mode (ie: bin/browsermob-proxy). If running as embedded mode (Java only), dependencies are declared in standard Maven pom.xml</p>
+<p>
+  The proxy is a free (Apache 2.0 license) utility that works well with Selenium or can be used independently. 
+</p>
+
+<p>
+  It can capture performance data for web apps (via the <a href="http://groups.google.com/group/http-archive-specification/web/har-1-1-spec">HAR format</a>), as well as manipulate browser behavior and traffic, such as whitelisting and blacklisting content, simulating network traffic and latency, and rewriting HTTP requests and responses.
+</p>
+
+<h2>Latest News</h2>
+
+<p>
+  <em>September 3, 2011</em> - 2.0 beta 3 is released - <a href="https://github.com/downloads/webmetrics/browsermob-proxy/browsermob-proxy-2.0-beta-3-bin.zip">download now</a>! This release fixes SSL support (it actually works now!) and adds support for capturing cookies (thanks to David Gomez).
+</p>
+
+<hr/>
+
 <h2>Install</h2>
-<p>Download the latest zip file and run bin/browsermob-proxy. Consult the README to learn about the various APIs available to manipulate the proxy.</p>
+
+<p>
+  Download the latest zip file and run bin/browsermob-proxy. Consult the <strong>README</strong> to learn about the various APIs available to manipulate the proxy.
+</p>
+
+<h2>Getting Help</h2>
+
+<p>
+  The best way to get involved is to first join the <a href="http://groups.google.com/group/browsermob-proxy">mailing list</a> and tell us how you're using BrowserMob Proxy and what features you'd like to see added.
+</p>
+
+<h2>Dependencies</h2>
+
+<p>
+  <strong>None</strong> if running as standalone proxy mode (ie: <strong>bin/browsermob-proxy</strong>). If running as embedded mode (Java only), dependencies are declared in standard Maven <strong>pom.xml</strong>.
+</p>
+
+<hr/>
+
 <h2>License</h2>
-<p>Apache 2.0</p>
+
+<p>
+  This project is available under the <a href="http://www.apache.org/licenses/LICENSE-2.0.html">Apache 2.0</a> license.
+</p>
+
 <h2>Authors</h2>
-<p>Chris Burroughs (chris.burroughs@gmail.com)<br/>David Gomez (david.garcia.mx@gmail.com)<br/>Patrick Lightbody (patrick@lightbody.net)<br/>Simon Stewart (simon.m.stewart@gmail.com)<br/>Mark Watson (watsonmw@gmail.com)<br/><br/>      </p>
-<h2>Contact</h2>
-<p>patrick@lightbody.net</p>
+<ul>
+  <li><a href="mailto:patrick@lightbody.net">Patrick Lightbody</a> (project lead)</li>
+  <li><a href="mailto:david.garcia.mx@gmail.com">David Gomez</a></li>
+  <li><a href="mailto:chris.burroughs@gmail.com">Chris Burroughs</a></li>
+  <li><a href="mailto:watsonmw@gmail.com">Mark Watson</a></li>
+  <li><a href="mailto:simon.m.stewart@gmail.com">Simon Stewart</a></li>
+</ul>
 
+<h2>Download</h2>
 
-    <h2>Download</h2>
-    <p>
-      You can download this project in either
-      <a href="http://github.com/webmetrics/browsermob-proxy/zipball/master">zip</a> or
-      <a href="http://github.com/webmetrics/browsermob-proxy/tarball/master">tar</a> formats.
-    </p>
-    <p>You can also clone the project with <a href="http://git-scm.com">Git</a>
-      by running:
-      <pre>$ git clone git://github.com/webmetrics/browsermob-proxy</pre>
-    </p>
+<p>
+  You can download this project in binary form in <a href="https://github.com/webmetrics/browsermob-proxy/downloads">zip</a> format.
+</p>
 
-    <div class="footer">
-      get the source code on GitHub : <a href="http://github.com/webmetrics/browsermob-proxy">webmetrics/browsermob-proxy</a>
-    </div>
+<p>You can also clone the project with <a href="http://git-scm.com">Git</a> by running:
+  <pre>$ git clone git://github.com/webmetrics/browsermob-proxy</pre>
+</p>
 
-  </div>
-
+</div>
   
 </body>
 </html>
