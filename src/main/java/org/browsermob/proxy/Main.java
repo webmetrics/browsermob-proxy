@@ -12,12 +12,22 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
 import javax.servlet.ServletContextEvent;
+import java.io.InputStream;
+import java.util.Properties;
 
 public class Main {
     private static final Log LOG = new Log();
 
     public static void main(String[] args) throws Exception {
-        LOG.info("Starting up...");
+        String version = "UNKNOWN/DEVELOPMENT";
+        InputStream is = Main.class.getResourceAsStream("/META-INF/maven/biz.neustar/browsermob-proxy/pom.properties");
+        if (is != null) {
+            Properties props = new Properties();
+            props.load(is);
+            version = props.getProperty("version");
+        }
+        LOG.info("Starting BrowserMob Proxy version %s", version);
+
 
         final Injector injector = Guice.createInjector(new ConfigModule(args), new JettyModule(), new SitebricksModule() {
             @Override
