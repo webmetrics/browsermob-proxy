@@ -133,79 +133,7 @@ public class SeleniumProxyHandler extends AbstractHttpHandler {
 
       /* ------------------------------------------------------------ */
 
-      /**
-       * Get proxy host white list.
-       *
-       * @return Array of hostnames and IPs that are proxied, or an empty array if all hosts are
-       *         proxied.
-       */
-      public String[] getProxyHostsWhiteList() {
-          if (_proxyHostsWhiteList == null || _proxyHostsWhiteList.size() == 0)
-              return new String[0];
-
-          String[] hosts = new String[_proxyHostsWhiteList.size()];
-          hosts = _proxyHostsWhiteList.toArray(hosts);
-          return hosts;
-      }
-
-      /* ------------------------------------------------------------ */
-
-      /**
-       * Set proxy host white list.
-       *
-       * @param hosts Array of hostnames and IPs that are proxied, or null if all hosts are proxied.
-       */
-      public void setProxyHostsWhiteList(String[] hosts) {
-          if (hosts == null || hosts.length == 0)
-              _proxyHostsWhiteList = null;
-          else {
-              _proxyHostsWhiteList = new HashSet<String>();
-              for (int i = 0; i < hosts.length; i++) {
-                  String host = hosts[i];
-                  if (host != null && host.trim().length() > 0)
-                      _proxyHostsWhiteList.add(host);
-              }
-          }
-      }
-
-      /* ------------------------------------------------------------ */
-
-      /**
-       * Get proxy host black list.
-       *
-       * @return Array of hostnames and IPs that are NOT proxied.
-       */
-      public String[] getProxyHostsBlackList() {
-          if (_proxyHostsBlackList == null || _proxyHostsBlackList.size() == 0)
-              return new String[0];
-
-          String[] hosts = new String[_proxyHostsBlackList.size()];
-          hosts = _proxyHostsBlackList.toArray(hosts);
-          return hosts;
-      }
-
-      /* ------------------------------------------------------------ */
-
-      /**
-       * Set proxy host black list.
-       *
-       * @param hosts Array of hostnames and IPs that are NOT proxied.
-       */
-      public void setProxyHostsBlackList(String[] hosts) {
-          if (hosts == null || hosts.length == 0)
-              _proxyHostsBlackList = null;
-          else {
-              _proxyHostsBlackList = new HashSet<String>();
-              for (int i = 0; i < hosts.length; i++) {
-                  String host = hosts[i];
-                  if (host != null && host.trim().length() > 0)
-                      _proxyHostsBlackList.add(host);
-              }
-          }
-      }
-
-      /* ------------------------------------------------------------ */
-      public int getTunnelTimeoutMs() {
+    public int getTunnelTimeoutMs() {
           return _tunnelTimeoutMs;
       }
 
@@ -499,14 +427,7 @@ public class SeleniumProxyHandler extends AbstractHttpHandler {
       }
 
 
-      public boolean shouldInject(String path) {
-          if (dontInjectRegex == null) {
-              return true;
-          }
-          return !path.matches(dontInjectRegex);
-      }
-
-      private void adjustRequestForProxyInjection(HttpRequest request, URLConnection connection) {
+    private void adjustRequestForProxyInjection(HttpRequest request, URLConnection connection) {
           request.setState(HttpMessage.__MSG_EDITABLE);
           if (request.containsField("If-Modified-Since")) {
               // TODO: still need to disable caching?  I want to prevent 304s during this development phase where
@@ -519,21 +440,7 @@ public class SeleniumProxyHandler extends AbstractHttpHandler {
           request.setState(HttpMessage.__MSG_RECEIVED);
       }
 
-      public synchronized void generateSSLCertsForLoggingHosts(HttpServer server) {
-          if (fakeCertsGenerated) return;
-          log.info("Creating 16 fake SSL servers for browser side logging");
-          for (int i = 1; i <= 16; i++) {
-              String uri = i + ".selenium.doesnotexist:443";
-              try {
-                  getSslRelayOrCreateNew(new URI(uri), new InetAddrPort(443), server);
-              } catch (Exception e) {
-                  log.log(Level.SEVERE, "Could not pre-create logging SSL relay for " + uri, e);
-              }
-          }
-          fakeCertsGenerated = true;
-      }
-
-      /* ------------------------------------------------------------ */
+    /* ------------------------------------------------------------ */
       public void handleConnect(String pathInContext, String pathParams, HttpRequest request, HttpResponse response) throws HttpException, IOException {
           URI uri = request.getURI();
 
