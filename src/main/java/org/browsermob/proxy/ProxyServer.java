@@ -24,6 +24,7 @@ public class ProxyServer {
     private BrowserMobHttpClient client;
     private HarPage currentPage;
     private BrowserMobProxyHandler handler;
+    private int pageCount = 1;
 
     public ProxyServer() {
     }
@@ -44,6 +45,7 @@ public class ProxyServer {
         server.addContext(context);
 
         handler = new BrowserMobProxyHandler();
+        handler.setJettyServer(server);
         handler.setShutdownLock(new Object());
         client = new BrowserMobHttpClient();
         client.prepareForBrowser();
@@ -88,6 +90,8 @@ public class ProxyServer {
     }
 
     public Har newHar(String initialPageRef) {
+        pageCount = 1;
+
         Har oldHar = getHar();
 
         Har har = new Har(new HarLog(CREATOR));
@@ -98,9 +102,15 @@ public class ProxyServer {
     }
 
     public void newPage(String pageRef) {
+        if (pageRef == null) {
+            pageRef = "Page " + pageCount;
+        }
+
         client.setHarPageRef(pageRef);
         currentPage = new HarPage(pageRef);
         client.getHar().getLog().addPage(currentPage);
+
+        pageCount++;
     }
 
     public void endPage() {
