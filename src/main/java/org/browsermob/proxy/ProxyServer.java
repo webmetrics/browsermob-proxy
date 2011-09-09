@@ -14,6 +14,7 @@ import org.browsermob.proxy.jetty.util.InetAddrPort;
 import org.openqa.selenium.Proxy;
 
 import java.util.Date;
+import java.util.Map;
 
 
 public class ProxyServer {
@@ -199,4 +200,9 @@ public class ProxyServer {
         // todo: need to implement
     }
 
+    public void setOptions(Map<String, String> options) {
+        if (options.containsKey("httpProxy")) {
+            client.setHttpProxy(options.get("httpProxy"));
+        }
+    }
 }

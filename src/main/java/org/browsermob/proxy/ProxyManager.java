@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.Provider;
 
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -19,11 +20,14 @@ public class ProxyManager {
         this.proxyServerProvider = proxyServerProvider;
     }
 
-    public ProxyServer create() throws Exception {
+    public ProxyServer create(Map<String, String> options) throws Exception {
         int port = portCounter.incrementAndGet();
         ProxyServer proxy = proxyServerProvider.get();
+
         proxy.setPort(port);
         proxy.start();
+        proxy.setOptions(options);
+
         proxies.put(port, proxy);
 
         return proxy;

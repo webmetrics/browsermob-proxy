@@ -15,6 +15,8 @@ import org.browsermob.core.har.Har;
 import org.browsermob.proxy.ProxyManager;
 import org.browsermob.proxy.ProxyServer;
 
+import java.util.Hashtable;
+
 @At("/proxy")
 @Service
 public class ProxyResource {
@@ -26,8 +28,15 @@ public class ProxyResource {
     }
 
     @Post
-    public Reply<ProxyDescriptor> newProxy() throws Exception {
-        ProxyServer proxy = proxyManager.create();
+    public Reply<ProxyDescriptor> newProxy(Request request) throws Exception {
+        String httpProxy = request.param("httpProxy");
+        Hashtable<String, String> options = new Hashtable<String, String>();
+
+        if (httpProxy != null) {
+            options.put("httpProxy", httpProxy);
+        }
+
+        ProxyServer proxy = proxyManager.create(options);
         int port = proxy.getPort();
 
         return Reply.with(new ProxyDescriptor(port)).as(Json.class);

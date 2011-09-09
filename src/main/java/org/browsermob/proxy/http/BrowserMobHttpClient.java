@@ -16,6 +16,7 @@ import org.apache.http.conn.ConnectionPoolTimeoutException;
 import org.apache.http.conn.ManagedClientConnection;
 import org.apache.http.conn.params.ConnManagerParams;
 import org.apache.http.conn.params.ConnPerRouteBean;
+import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.conn.routing.HttpRoute;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
@@ -898,6 +899,13 @@ public class BrowserMobHttpClient {
 
     public void setCaptureContent(boolean captureContent) {
         this.captureContent = captureContent;
+    }
+
+    public void setHttpProxy(String httpProxy) {
+        String host = httpProxy.split(":")[0];
+        Integer port = Integer.parseInt(httpProxy.split(":")[1]);
+        HttpHost proxy = new HttpHost(host, port);
+        httpClient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY,proxy);
     }
 
     static class PreemptiveAuth implements HttpRequestInterceptor {
