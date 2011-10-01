@@ -20,6 +20,14 @@ import org.apache.http.protocol.HttpContext;
 
 import com.google.common.collect.Lists;
 
+/**
+ * Modified version of org.apache.http.client.protocol.ResponseProcessCookies
+ * Performs the same functionality used to parse the Set-Cookie header and saves response cookies to 
+ * the context with key "browsermob.http.response.cookies".
+ * 
+ * @author dgomez
+ *
+ */
 public class ResponseCookiesInterceptor implements HttpResponseInterceptor {
 
     private final Log log = LogFactory.getLog(getClass());
