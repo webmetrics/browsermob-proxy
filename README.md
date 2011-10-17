@@ -63,6 +63,11 @@ That will ensure no more HTTP requests get attached to the old pageRef (Foo) and
 
     [~]$ curl http://localhost:8080/proxy/9091/har
 
+Sometimes you will want to route requests through an upstream proxy server. In this case specify your proxy server by adding the httpProxy parameter to your create proxy request:
+
+    [~]$ curl -X POST http://localhost:9090/proxy?httpProxy=yourproxyserver.com:8080
+    {"port":9091}
+
 *TODO*: Other REST APIs supporting all the BrowserMob Proxy features will be added soon.
 
 Embedded Mode
