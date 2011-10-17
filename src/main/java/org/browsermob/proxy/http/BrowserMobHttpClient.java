@@ -1,49 +1,10 @@
 package org.browsermob.proxy.http;
 
-import cz.mallat.uasparser.CachingOnlineUpdateUASparser;
-import cz.mallat.uasparser.UASparser;
-import cz.mallat.uasparser.UserAgentInfo;
-import org.apache.http.*;
-import org.apache.http.auth.*;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.methods.*;
-import org.apache.http.client.params.ClientPNames;
-import org.apache.http.client.params.CookiePolicy;
-import org.apache.http.client.protocol.ClientContext;
-import org.apache.http.client.utils.URLEncodedUtils;
-import org.apache.http.conn.ClientConnectionRequest;
-import org.apache.http.conn.ConnectionPoolTimeoutException;
-import org.apache.http.conn.ManagedClientConnection;
-import org.apache.http.conn.params.ConnManagerParams;
-import org.apache.http.conn.params.ConnPerRouteBean;
-import org.apache.http.conn.params.ConnRoutePNames;
-import org.apache.http.conn.routing.HttpRoute;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.scheme.SchemeRegistry;
-import org.apache.http.conn.ssl.SSLSocketFactory;
-import org.apache.http.cookie.*;
-import org.apache.http.impl.auth.BasicScheme;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
-import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
-import org.apache.http.impl.cookie.BasicClientCookie;
-import org.apache.http.impl.cookie.BrowserCompatSpec;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.http.params.CoreConnectionPNames;
-import org.apache.http.params.HttpParams;
-import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.ExecutionContext;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpRequestExecutor;
-import org.browsermob.core.har.*;
-import org.browsermob.proxy.util.CappedByteArrayOutputStream;
-import org.browsermob.proxy.util.Log;
-import org.eclipse.jetty.util.MultiMap;
-import org.eclipse.jetty.util.UrlEncoded;
-import org.xbill.DNS.Cache;
-import org.xbill.DNS.DClass;
-
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Date;
@@ -56,6 +17,79 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
+
+import org.apache.http.Header;
+import org.apache.http.HeaderElement;
+import org.apache.http.HttpClientConnection;
+import org.apache.http.HttpConnection;
+import org.apache.http.HttpException;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpRequestInterceptor;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpResponseInterceptor;
+import org.apache.http.NameValuePair;
+import org.apache.http.ParseException;
+import org.apache.http.StatusLine;
+import org.apache.http.auth.AuthScheme;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.AuthState;
+import org.apache.http.auth.Credentials;
+import org.apache.http.auth.NTCredentials;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
+import org.apache.http.client.methods.HttpOptions;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.params.ClientPNames;
+import org.apache.http.client.protocol.ClientContext;
+import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.http.conn.ClientConnectionRequest;
+import org.apache.http.conn.ConnectionPoolTimeoutException;
+import org.apache.http.conn.ManagedClientConnection;
+import org.apache.http.conn.params.ConnManagerParams;
+import org.apache.http.conn.params.ConnPerRouteBean;
+import org.apache.http.conn.params.ConnRoutePNames;
+import org.apache.http.conn.routing.HttpRoute;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
+import org.apache.http.conn.ssl.SSLSocketFactory;
+import org.apache.http.cookie.Cookie;
+import org.apache.http.cookie.params.CookieSpecPNames;
+import org.apache.http.impl.auth.BasicScheme;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
+import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.http.impl.cookie.BasicClientCookie;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.CoreConnectionPNames;
+import org.apache.http.params.HttpParams;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.ExecutionContext;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.protocol.HttpRequestExecutor;
+import org.browsermob.core.har.Har;
+import org.browsermob.core.har.HarCookie;
+import org.browsermob.core.har.HarEntry;
+import org.browsermob.core.har.HarNameValuePair;
+import org.browsermob.core.har.HarNameVersion;
+import org.browsermob.core.har.HarRequest;
+import org.browsermob.core.har.HarResponse;
+import org.browsermob.core.har.HarTimings;
+import org.browsermob.proxy.util.CappedByteArrayOutputStream;
+import org.browsermob.proxy.util.Log;
+import org.eclipse.jetty.util.MultiMap;
+import org.eclipse.jetty.util.UrlEncoded;
+import org.xbill.DNS.Cache;
+import org.xbill.DNS.DClass;
+
+import cz.mallat.uasparser.CachingOnlineUpdateUASparser;
+import cz.mallat.uasparser.UASparser;
+import cz.mallat.uasparser.UserAgentInfo;
 
 public class BrowserMobHttpClient {
     private static final int BUFFER = 4096;
@@ -155,8 +189,7 @@ public class BrowserMobHttpClient {
         httpClient.setCredentialsProvider(credsProvider);
         httpClient.addRequestInterceptor(new PreemptiveAuth(), 0);
         httpClient.getParams().setParameter(ClientPNames.HANDLE_REDIRECTS, true);
-        httpClient.getParams().setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.BROWSER_COMPATIBILITY);
-        httpClient.getParams().setParameter("http.protocol.single-cookie-header", Boolean.TRUE);
+        httpClient.getParams().setParameter(CookieSpecPNames.SINGLE_COOKIE_HEADER, Boolean.TRUE);
         setRetryCount(0);
 
         // we always set this to false so it can be handled manually:
@@ -655,10 +688,14 @@ public class BrowserMobHttpClient {
         }
         */
         
-        //capture request cookies
-        CookieHeadersParser cookieParser = new CookieHeadersParser();
-        List<HarCookie> cookies = cookieParser.getCookies(method); 
-        entry.getRequest().setCookies(cookies);
+        //capture request cookies       
+        List<Cookie> cookies = (List<Cookie>) ctx.getAttribute("browsermob.http.request.cookies");        
+        if (cookies != null) {
+	        for (Cookie c : cookies) {
+		        HarCookie hc = toHarCookie(c);
+		        entry.getRequest().getCookies().add(hc);        	
+	        }
+        }
 
         String contentType = null;
 
@@ -685,9 +722,14 @@ public class BrowserMobHttpClient {
                 throw new RuntimeException(e);
             }
             
-            //capture response cookies            
-            cookies = cookieParser.getCookies(response); 
-            entry.getResponse().setCookies(cookies);
+            //capture response cookies
+            cookies = (List<Cookie>) ctx.getAttribute("browsermob.http.response.cookies");            
+            if (cookies != null) {
+    	        for (Cookie c : cookies) {
+    		        HarCookie hc = toHarCookie(c);
+    		        entry.getResponse().getCookies().add(hc);        	
+    	        }
+            }
         }
 
         if (contentType != null) {
@@ -863,20 +905,9 @@ public class BrowserMobHttpClient {
     }
 
     public void prepareForBrowser() {
-        // Clear cookies, let the browser handle them
-        httpClient.setCookieStore(new BlankCookieStore());
-        httpClient.getCookieSpecs().register("easy", new CookieSpecFactory() {
-            @Override
-            public CookieSpec newInstance(HttpParams params) {
-                return new BrowserCompatSpec() {
-                    @Override
-                    public void validate(Cookie cookie, CookieOrigin origin) throws MalformedCookieException {
-                        // easy!
-                    }
-                };
-            }
-        });
-        httpClient.getParams().setParameter(ClientPNames.COOKIE_POLICY, "easy");
+    	//save request and reponse cookies to the context
+    	httpClient.addRequestInterceptor(new RequestCookiesInterceptor());
+    	httpClient.addResponseInterceptor(new ResponseCookiesInterceptor());
         decompress = false;
         setFollowRedirects(false);
     }
@@ -936,6 +967,16 @@ public class BrowserMobHttpClient {
                 }
             }
         }
+    }
+        
+    private HarCookie toHarCookie(Cookie c) {
+        HarCookie hc = new HarCookie();
+        hc.setName(c.getName());
+        hc.setPath(c.getPath());
+        hc.setValue(c.getValue());
+        hc.setDomain(c.getDomain());
+        hc.setExpires(c.getExpiryDate());
+        return hc;    	
     }
 
     class ActiveRequest {
