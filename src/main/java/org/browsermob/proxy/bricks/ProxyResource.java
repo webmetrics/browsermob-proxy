@@ -1,5 +1,6 @@
 package org.browsermob.proxy.bricks;
 
+import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.sitebricks.At;
@@ -14,8 +15,14 @@ import com.google.sitebricks.http.Put;
 import org.browsermob.core.har.Har;
 import org.browsermob.proxy.ProxyManager;
 import org.browsermob.proxy.ProxyServer;
+import org.apache.http.HttpRequestInterceptor;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.HttpRequest;
 
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.List;
 
 @At("/proxy")
 @Service
@@ -102,6 +109,27 @@ public class ProxyResource {
         return Reply.saying().ok();
     }
 
+    @Put
+    @At("/:port/headers")
+    public Reply<?> headers(@Named("port") int port, Request request) {
+        ProxyServer proxy = proxyManager.get(port);
+        final Multimap headers = request.params();
+        proxy.addRequestInterceptor(new HttpRequestInterceptor() {
+            @Override
+            public void process(HttpRequest request, HttpContext context) {
+                Set keySet = headers.keySet();
+                Iterator keyIterator = keySet.iterator();
+                while (keyIterator.hasNext() ) {
+                    String key = (String) keyIterator.next();
+                    List values = (List) headers.get(key);
+                    String value = (String) values.get(0);
+                    request.removeHeaders(key);
+                    request.addHeader(key, value);
+                }
+            }
+        });
+        return Reply.saying().ok();
+    }
 
     @Put
     @At("/:port/limit")
