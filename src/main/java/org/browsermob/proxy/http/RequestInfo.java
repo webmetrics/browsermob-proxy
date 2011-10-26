@@ -218,7 +218,7 @@ public class RequestInfo {
 
         long connect = 0;
         if (this.connect != null) {
-            receive = this.connect;
+            connect = this.connect;
         }
 
         return new HarTimings(blocked, dns, connect, send, wait, receive);
