@@ -43,9 +43,15 @@ public class ProxyResource {
             options.put("httpProxy", httpProxy);
         }
 
-        ProxyServer proxy = proxyManager.create(options);
-        int port = proxy.getPort();
-
+        String paramPort = request.param("port");
+        int port = 0;
+        if (paramPort != null) {
+            port = Integer.parseInt(paramPort);
+            ProxyServer proxy = proxyManager.create(options, port);
+        } else {
+            ProxyServer proxy = proxyManager.create(options);
+            port = proxy.getPort();
+        }
         return Reply.with(new ProxyDescriptor(port)).as(Json.class);
     }
 
