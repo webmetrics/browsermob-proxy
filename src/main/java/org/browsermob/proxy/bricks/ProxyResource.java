@@ -1,6 +1,5 @@
 package org.browsermob.proxy.bricks;
 
-import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.sitebricks.At;
@@ -20,7 +19,6 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.HttpRequest;
 
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.List;
 
@@ -116,24 +114,14 @@ public class ProxyResource {
     }
 
     @Put
-    @At("/:port/headers")
-    public Reply<?> headers(@Named("port") int port, Request request) {
+    @At("/:port/addHeader")
+    public Reply<?> addHeader(@Named("port") int port, Request request) {
         ProxyServer proxy = proxyManager.get(port);
-        final Multimap headers = request.params();
-        proxy.addRequestInterceptor(new HttpRequestInterceptor() {
-            @Override
-            public void process(HttpRequest request, HttpContext context) {
-                Set keySet = headers.keySet();
-                Iterator keyIterator = keySet.iterator();
-                while (keyIterator.hasNext() ) {
-                    String key = (String) keyIterator.next();
-                    List values = (List) headers.get(key);
-                    String value = (String) values.get(0);
-                    request.removeHeaders(key);
-                    request.addHeader(key, value);
-                }
-            }
-        });
+        String header = request.param("header");
+        String[] temp = header.split(":", 2);
+        String name = temp[0];
+        String value = temp[1];
+        proxy.addHeader(name, value);
         return Reply.saying().ok();
     }
 

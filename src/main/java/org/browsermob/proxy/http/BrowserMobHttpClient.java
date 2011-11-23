@@ -9,6 +9,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -109,6 +111,7 @@ public class BrowserMobHttpClient {
     private List<BlacklistEntry> blacklistEntries = null;
     private WhitelistEntry whitelistEntry = null;
     private List<RewriteRule> rewriteRules = new CopyOnWriteArrayList<RewriteRule>();
+    private HashMap<String, String> additionalHeaders = new HashMap();
     private int requestTimeout;
     private AtomicBoolean allowNewRequests = new AtomicBoolean(true);
     private BrowserMobHostNameResolver hostNameResolver;
@@ -469,6 +472,17 @@ public class BrowserMobHttpClient {
                 }
             }
         }
+
+        if (!additionalHeaders.isEmpty()) {
+            // Set the additional headers
+            for (Map.Entry<String, String> entry : additionalHeaders.entrySet()) {
+                String key = entry.getKey();
+                String value = entry.getValue();
+                method.removeHeaders(key);
+                method.addHeader(key, value);
+            }
+        }
+
 
         String charSet = "UTF-8";
         String responseBody = null;
@@ -902,6 +916,10 @@ public class BrowserMobHttpClient {
 
     public void whitelistRequests(String[] patterns, int responseCode) {
         whitelistEntry = new WhitelistEntry(patterns, responseCode);
+    }
+
+    public void addHeader(String name, String value) {
+        additionalHeaders.put(name, value);
     }
 
     public void prepareForBrowser() {

@@ -180,6 +180,10 @@ public class ProxyServer {
         client.whitelistRequests(patterns, responseCode);
     }
 
+    public void addHeader(String name, String value) {
+        client.addHeader(name, value);
+    }
+
     public void setCaptureHeaders(boolean captureHeaders) {
         client.setCaptureHeaders(captureHeaders);
     }
