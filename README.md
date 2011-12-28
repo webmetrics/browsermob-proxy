@@ -55,9 +55,8 @@ Once that is done, a new proxy will be available on the port returned. All you h
   - downstreamKbps - Sets the downstream kbps
   - upstreamKbps - Sets the upstream kbps
   - latency - Add the given latency to each HTTP request
- - PUT /proxy/[port]/addHeader - Set and override HTTP Request headers. For example setting a custom User-Agent.
-  - header - "key:value" pair for the header to add.
-   - eg "header=User-Agent:MyBrowser"
+ - POST /proxy/[port]/headers - Set and override HTTP Request headers. For example setting a custom User-Agent.
+  - POST data should be json encoded set of headers (not url-encoded)
 
 For example, once you've started the proxy you can create a new HAR to start recording data like so:
 

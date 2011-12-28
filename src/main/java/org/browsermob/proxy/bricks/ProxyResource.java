@@ -19,6 +19,7 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.HttpRequest;
 
 import java.util.Hashtable;
+import java.util.Map;
 import java.util.Set;
 import java.util.List;
 
@@ -113,17 +114,17 @@ public class ProxyResource {
         return Reply.saying().ok();
     }
 
-    @Put
-    @At("/:port/addHeader")
-    public Reply<?> addHeader(@Named("port") int port, Request request) {
+    @Post
+    @At("/:port/headers")
+    public Reply<?> updateHeaders(@Named("port") int port, Request request) {
         ProxyServer proxy = proxyManager.get(port);
-        String header = request.param("header");
-        String[] temp = header.split(":", 2);
-        String name = temp[0];
-        String value = temp[1];
-        proxy.addHeader(name, value);
+        Map<String, String> headers = request.read(Map.class).as(Json.class);
+        for (Map.Entry<String, String> entry : headers.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+            proxy.addHeader(key, value);
+        }
         return Reply.saying().ok();
-    }
 
     @Put
     @At("/:port/limit")
