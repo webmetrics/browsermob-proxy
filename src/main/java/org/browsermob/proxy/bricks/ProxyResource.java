@@ -1,6 +1,5 @@
 package org.browsermob.proxy.bricks;
 
-import com.google.common.collect.Multimap;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.sitebricks.At;
@@ -20,7 +19,7 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.HttpRequest;
 
 import java.util.Hashtable;
-import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.List;
 
@@ -43,9 +42,15 @@ public class ProxyResource {
             options.put("httpProxy", httpProxy);
         }
 
-        ProxyServer proxy = proxyManager.create(options);
-        int port = proxy.getPort();
-
+        String paramPort = request.param("port");
+        int port = 0;
+        if (paramPort != null) {
+            port = Integer.parseInt(paramPort);
+            ProxyServer proxy = proxyManager.create(options, port);
+        } else {
+            ProxyServer proxy = proxyManager.create(options);
+            port = proxy.getPort();
+        }
         return Reply.with(new ProxyDescriptor(port)).as(Json.class);
     }
 
@@ -109,27 +114,17 @@ public class ProxyResource {
         return Reply.saying().ok();
     }
 
-    @Put
+    @Post
     @At("/:port/headers")
-    public Reply<?> headers(@Named("port") int port, Request request) {
+    public Reply<?> updateHeaders(@Named("port") int port, Request request) {
         ProxyServer proxy = proxyManager.get(port);
-        final Multimap headers = request.params();
-        proxy.addRequestInterceptor(new HttpRequestInterceptor() {
-            @Override
-            public void process(HttpRequest request, HttpContext context) {
-                Set keySet = headers.keySet();
-                Iterator keyIterator = keySet.iterator();
-                while (keyIterator.hasNext() ) {
-                    String key = (String) keyIterator.next();
-                    List values = (List) headers.get(key);
-                    String value = (String) values.get(0);
-                    request.removeHeaders(key);
-                    request.addHeader(key, value);
-                }
-            }
-        });
+        Map<String, String> headers = request.read(Map.class).as(Json.class);
+        for (Map.Entry<String, String> entry : headers.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+            proxy.addHeader(key, value);
+        }
         return Reply.saying().ok();
-    }
 
     @Put
     @At("/:port/limit")

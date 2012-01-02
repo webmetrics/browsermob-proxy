@@ -31,6 +31,11 @@ Once started, there won't be an actual proxy running until you create a new prox
     [~]$ curl -X POST http://localhost:9090/proxy
     {"port":9091}
 
+or optionally specify your own port:
+
+    [~]$ curl -X POST -d 'port=9099' http://localhost:9090/proxy
+    {"port":9099}
+
 Once that is done, a new proxy will be available on the port returned. All you have to do is point a browser to that proxy on that port and you should be able to browser the internet. The following additional APIs will then be available:
 
  - PUT /proxy/[port]/har - creates a new HAR attached to the proxy and returns the HAR content if there was a previous HAR. Supports the following parameters:
@@ -50,9 +55,8 @@ Once that is done, a new proxy will be available on the port returned. All you h
   - downstreamKbps - Sets the downstream kbps
   - upstreamKbps - Sets the upstream kbps
   - latency - Add the given latency to each HTTP request
- - PUT /proxy/[port]/headers - Set and override HTTP Request headers. For example setting a custom User-Agent.
-  - Accepts an arbitrary set of paramaters, these are treated as name:value pairs for setting the headers.
-  - NOTE: Currently, custom header names (not values) should be sent with underscores (\_) used in the place of hyphens (-). eg. "User_Agent" instead of User-Agent. This will give the expected behavior.
+ - POST /proxy/[port]/headers - Set and override HTTP Request headers. For example setting a custom User-Agent.
+  - POST data should be json encoded set of headers (not url-encoded)
 
 For example, once you've started the proxy you can create a new HAR to start recording data like so:
 

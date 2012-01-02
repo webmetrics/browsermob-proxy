@@ -20,6 +20,15 @@ public class ProxyManager {
         this.proxyServerProvider = proxyServerProvider;
     }
 
+    public ProxyServer create(Map<String, String> options, int port) throws Exception {
+        ProxyServer proxy = proxyServerProvider.get();
+        proxy.setPort(port);
+        proxy.start();
+        proxy.setOptions(options);
+        proxies.put(port, proxy);
+        return proxy;
+    }
+
     public ProxyServer create(Map<String, String> options) throws Exception {
         int port = portCounter.incrementAndGet();
         ProxyServer proxy = proxyServerProvider.get();
