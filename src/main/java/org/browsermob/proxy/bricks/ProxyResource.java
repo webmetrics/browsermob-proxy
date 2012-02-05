@@ -125,6 +125,7 @@ public class ProxyResource {
             proxy.addHeader(key, value);
         }
         return Reply.saying().ok();
+    }
 
     @Put
     @At("/:port/limit")
