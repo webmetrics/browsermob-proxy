@@ -8,6 +8,7 @@ import org.browsermob.core.har.HarNameVersion;
 import org.browsermob.core.har.HarPage;
 import org.browsermob.proxy.http.BrowserMobHttpClient;
 import org.browsermob.proxy.jetty.http.HttpContext;
+import org.browsermob.proxy.jetty.http.HttpListener;
 import org.browsermob.proxy.jetty.http.SocketListener;
 import org.browsermob.proxy.jetty.jetty.Server;
 import org.browsermob.proxy.jetty.util.InetAddrPort;
@@ -43,7 +44,8 @@ public class ProxyServer {
         }
 
         server = new Server();
-        server.addListener(new SocketListener(new InetAddrPort(getPort()))); // todo: arg?
+        HttpListener listener = new SocketListener(new InetAddrPort(getPort()));
+        server.addListener(listener);
         HttpContext context = new HttpContext();
         context.setContextPath("/");
         server.addContext(context);
@@ -59,6 +61,8 @@ public class ProxyServer {
         context.addHandler(handler);
 
         server.start();
+
+        setPort(listener.getPort());
     }
 
     public org.openqa.selenium.Proxy seleniumProxy() throws UnknownHostException {
