@@ -13,8 +13,11 @@ import org.browsermob.proxy.jetty.jetty.Server;
 import org.browsermob.proxy.jetty.util.InetAddrPort;
 import org.openqa.selenium.Proxy;
 
+import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.Map;
+
+import java.net.InetAddress;
 
 
 public class ProxyServer {
@@ -58,10 +61,10 @@ public class ProxyServer {
         server.start();
     }
 
-    public org.openqa.selenium.Proxy seleniumProxy() {
+    public org.openqa.selenium.Proxy seleniumProxy() throws UnknownHostException {
         Proxy proxy = new Proxy();
         proxy.setProxyType(Proxy.ProxyType.MANUAL);
-        String proxyStr = String.format("localhost:%d", getPort());
+        String proxyStr = String.format("%s:%d", InetAddress.getLocalHost().getCanonicalHostName(),  getPort());
         proxy.setHttpProxy(proxyStr);
         proxy.setSslProxy(proxyStr);
 
