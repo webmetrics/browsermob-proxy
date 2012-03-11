@@ -2,16 +2,16 @@ package org.browsermob.core.har;
 
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 public class HarLog {
     private String version = "1.1";
     private HarNameVersion creator;
     private HarNameVersion browser;
-    private List<HarPage> pages = new ArrayList<HarPage>();
-    private List<HarEntry> entries = new ArrayList<HarEntry>();
+    private List<HarPage> pages = new CopyOnWriteArrayList<HarPage>();
+    private List<HarEntry> entries = new CopyOnWriteArrayList<HarEntry>();
 
     public HarLog() {
     }
@@ -22,7 +22,7 @@ public class HarLog {
 
     public void addPage(HarPage page) {
         if (pages == null) {
-            pages = new ArrayList<HarPage>();
+            pages = new CopyOnWriteArrayList<HarPage>();
         }
 
         pages.add(page);
@@ -30,7 +30,7 @@ public class HarLog {
 
     public void addEntry(HarEntry entry) {
         if (entries == null) {
-            entries = new ArrayList<HarEntry>();
+            entries = new CopyOnWriteArrayList<HarEntry>();
         }
 
         entries.add(entry);

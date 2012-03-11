@@ -2,17 +2,17 @@ package org.browsermob.core.har;
 
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 public class HarRequest {
     private String method;
     private String url;
     private String httpVersion;
-    private List<HarCookie> cookies = new ArrayList<HarCookie>();
-    private List<HarNameValuePair> headers = new ArrayList<HarNameValuePair>();
-    private List<HarNameValuePair> queryString = new ArrayList<HarNameValuePair>();
+    private List<HarCookie> cookies = new CopyOnWriteArrayList<HarCookie>();
+    private List<HarNameValuePair> headers = new CopyOnWriteArrayList<HarNameValuePair>();
+    private List<HarNameValuePair> queryString = new CopyOnWriteArrayList<HarNameValuePair>();
     private HarPostData postData;
     private long headersSize; // Odd grammar in spec
     private long bodySize;

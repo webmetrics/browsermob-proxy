@@ -2,16 +2,16 @@ package org.browsermob.core.har;
 
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 public class HarResponse {
     private int status;
     private String statusText;
     private String httpVersion;
-    private List<HarCookie> cookies = new ArrayList<HarCookie>();
-    private List<HarNameValuePair> headers = new ArrayList<HarNameValuePair>();
+    private List<HarCookie> cookies = new CopyOnWriteArrayList<HarCookie>();
+    private List<HarNameValuePair> headers = new CopyOnWriteArrayList<HarNameValuePair>();
     private HarContent content = new HarContent();
     private String redirectURL = "";
     private long headersSize;
