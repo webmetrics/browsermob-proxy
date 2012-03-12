@@ -85,7 +85,7 @@ If you're using Java and Selenium, the easiest way to get started is to embed th
     <dependency>
         <groupId>biz.neustar</groupId>
         <artifactId>browsermob-proxy</artifactId>
-        <version>2.0-beta-5</version>
+        <version>LATEST_VERSION (ex: 2.0-beta-6)</version>
         <scope>test</scope>
     </dependency>
 
@@ -101,7 +101,7 @@ If your project already defines a Selenium dependency then you may want to exclu
     <dependency>
         <groupId>biz.neustar</groupId>
         <artifactId>browsermob-proxy</artifactId>
-        <version>2.0-beta-5</version>
+        <version>LATEST_VERSION (ex: 2.0-beta-6)</version>
         <scope>test</scope>
         <exclusions>
             <exclusion>
