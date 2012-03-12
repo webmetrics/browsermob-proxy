@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>biz.neustar</groupId>
     <artifactId>browsermob-proxy</artifactId>
-    <version>2.0-beta-6</version>
+    <version>2.0-beta-7-SNAPSHOT</version>
     <name>BrowserMob Proxy</name>
     <description>A programmatic HTTP/S designed for performance and functional testing</description>
     <url>http://opensource.webmetrics.com/browsermob-proxy</url>
