@@ -83,12 +83,11 @@ Embedded Mode
 If you're using Java and Selenium, the easiest way to get started is to embed the project directly in your test. First, you'll need to make sure that all the dependencies are imported in to the project. You can find them in the *lib* directory. Or, if you're using Maven, you can add this to your pom:
 
     <dependency>
-        <groupId>org.browsermob</groupId>
+        <groupId>biz.neustar</groupId>
         <artifactId>browsermob-proxy</artifactId>
-        <version>2.0-SNAPSHOT</version>
+        <version>2.0-beta-5</version>
+        <scope>test</scope>
     </dependency>
-
-*TODO*: We haven't yet released the artifacts to Maven's central repository, but we are working on it. The above will work as soon as it's ready.
 
 Once done, you can start a proxy using `org.browsermob.proxy.ProxyServer`:
 
@@ -96,6 +95,22 @@ Once done, you can start a proxy using `org.browsermob.proxy.ProxyServer`:
     server.start();
 
 This class supports every feature that the proxy supports. In fact, the REST API is a subset of the methods exposed here, so new features will show up here before they show up in the REST API. Consult the Javadocs for the full API.
+
+If your project already defines a Selenium dependency then you may want to exclude the version that browsermob-proxy pulls in, like so:
+
+    <dependency>
+        <groupId>biz.neustar</groupId>
+        <artifactId>browsermob-proxy</artifactId>
+        <version>2.0-beta-5</version>
+        <scope>test</scope>
+        <exclusions>
+            <exclusion>
+                <groupId>org.seleniumhq.selenium</groupId>
+                <artifactId>selenium-api</artifactId>
+            </exclusion>
+        </exclusions>
+    </dependency>
+
 
 Using With Selenium
 -------------------
