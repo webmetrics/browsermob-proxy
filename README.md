@@ -56,7 +56,9 @@ Once that is done, a new proxy will be available on the port returned. All you h
   - upstreamKbps - Sets the upstream kbps
   - latency - Add the given latency to each HTTP request
  - POST /proxy/[port]/headers - Set and override HTTP Request headers. For example setting a custom User-Agent.
-  - POST data should be json encoded set of headers (not url-encoded)
+  - Payload data should be json encoded set of headers (not url-encoded)
+ - POST /proxy/[port]/hosts - Overrides normal DNS lookups and remaps the given hosts with the associated IP address
+  - Payload data should be json encoded set of name/value pairs (ex: {"example.com": "1.2.3.4"})
 
 For example, once you've started the proxy you can create a new HAR to start recording data like so:
 

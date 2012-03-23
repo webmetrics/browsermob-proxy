@@ -14,14 +14,9 @@ import com.google.sitebricks.http.Put;
 import org.browsermob.core.har.Har;
 import org.browsermob.proxy.ProxyManager;
 import org.browsermob.proxy.ProxyServer;
-import org.apache.http.HttpRequestInterceptor;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.HttpRequest;
 
 import java.util.Hashtable;
 import java.util.Map;
-import java.util.Set;
-import java.util.List;
 
 @At("/proxy")
 @Service
@@ -158,6 +153,24 @@ public class ProxyResource {
         proxyManager.delete(port);
         return Reply.saying().ok();
     }
+
+    @Post
+    @At("/:port/hosts")
+    public Reply<?> remapHosts(@Named("port") int port, Request request) {
+        ProxyServer proxy = proxyManager.get(port);
+        @SuppressWarnings("unchecked") Map<String, String> headers = request.read(Map.class).as(Json.class);
+
+        for (Map.Entry<String, String> entry : headers.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+            proxy.remapHost(key, value);
+            proxy.setDNSCacheTimeout(0);
+            proxy.clearDNSCache();
+        }
+
+        return Reply.saying().ok();
+    }
+
 
     private int parseResponseCode(String response)
     {
