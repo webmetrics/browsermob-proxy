@@ -2,10 +2,8 @@ package org.browsermob.proxy;
 
 import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.HttpResponseInterceptor;
-import org.browsermob.core.har.Har;
-import org.browsermob.core.har.HarLog;
-import org.browsermob.core.har.HarNameVersion;
-import org.browsermob.core.har.HarPage;
+import org.browsermob.core.har.*;
+import org.browsermob.core.util.ThreadUtils;
 import org.browsermob.proxy.http.BrowserMobHttpClient;
 import org.browsermob.proxy.jetty.http.HttpContext;
 import org.browsermob.proxy.jetty.http.HttpListener;
@@ -14,11 +12,11 @@ import org.browsermob.proxy.jetty.jetty.Server;
 import org.browsermob.proxy.jetty.util.InetAddrPort;
 import org.openqa.selenium.Proxy;
 
+import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.Map;
-
-import java.net.InetAddress;
+import java.util.concurrent.TimeUnit;
 
 
 public class ProxyServer {
@@ -208,7 +206,35 @@ public class ProxyServer {
     }
 
     public void waitForNetworkTrafficToStop(final long quietPeriodInMs, long timeoutInMs) {
-        // todo: need to implement
+        long start = System.currentTimeMillis();
+        boolean result = ThreadUtils.waitFor(new ThreadUtils.WaitCondition() {
+            @Override
+            public boolean checkCondition(long elapsedTimeInMs) {
+                Date lastCompleted = null;
+
+                for (HarEntry entry : client.getHar().getLog().getEntries()) {
+                    // if there is an active request, just stop looking
+                    if (entry.getResponse().getStatus() < 0) {
+                        return false;
+                    }
+
+                    Date end = new Date(entry.getStartedDateTime().getTime() + entry.getTime());
+                    if (lastCompleted == null) {
+                        lastCompleted = end;
+                    } else if (end.after(lastCompleted)) {
+                        lastCompleted = end;
+                    }
+                }
+                
+                return lastCompleted != null && System.currentTimeMillis() - lastCompleted.getTime() >= quietPeriodInMs;
+            }
+        }, TimeUnit.MILLISECONDS, timeoutInMs);
+        long end = System.currentTimeMillis();
+        long time = (end - start);
+
+        if (!result) {
+            throw new RuntimeException("Timed out after " + timeoutInMs + " ms while waiting for network traffic to stop");
+        }
     }
 
     public void setOptions(Map<String, String> options) {
