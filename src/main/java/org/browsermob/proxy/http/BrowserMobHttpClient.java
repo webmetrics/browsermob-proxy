@@ -1,52 +1,12 @@
 package org.browsermob.proxy.http;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.zip.GZIPInputStream;
-
-import org.apache.http.Header;
-import org.apache.http.HeaderElement;
-import org.apache.http.HttpClientConnection;
-import org.apache.http.HttpConnection;
-import org.apache.http.HttpException;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpRequestInterceptor;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpResponseInterceptor;
-import org.apache.http.NameValuePair;
-import org.apache.http.ParseException;
-import org.apache.http.StatusLine;
-import org.apache.http.auth.AuthScheme;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.AuthState;
-import org.apache.http.auth.Credentials;
-import org.apache.http.auth.NTCredentials;
-import org.apache.http.auth.UsernamePasswordCredentials;
+import cz.mallat.uasparser.CachingOnlineUpdateUASparser;
+import cz.mallat.uasparser.UASparser;
+import cz.mallat.uasparser.UserAgentInfo;
+import org.apache.http.*;
+import org.apache.http.auth.*;
 import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpHead;
-import org.apache.http.client.methods.HttpOptions;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
-import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.methods.*;
 import org.apache.http.client.params.ClientPNames;
 import org.apache.http.client.protocol.ClientContext;
 import org.apache.http.client.utils.URLEncodedUtils;
@@ -74,14 +34,7 @@ import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.ExecutionContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestExecutor;
-import org.browsermob.core.har.Har;
-import org.browsermob.core.har.HarCookie;
-import org.browsermob.core.har.HarEntry;
-import org.browsermob.core.har.HarNameValuePair;
-import org.browsermob.core.har.HarNameVersion;
-import org.browsermob.core.har.HarRequest;
-import org.browsermob.core.har.HarResponse;
-import org.browsermob.core.har.HarTimings;
+import org.browsermob.core.har.*;
 import org.browsermob.proxy.util.CappedByteArrayOutputStream;
 import org.browsermob.proxy.util.Log;
 import org.eclipse.jetty.util.MultiMap;
@@ -89,9 +42,16 @@ import org.eclipse.jetty.util.UrlEncoded;
 import org.xbill.DNS.Cache;
 import org.xbill.DNS.DClass;
 
-import cz.mallat.uasparser.CachingOnlineUpdateUASparser;
-import cz.mallat.uasparser.UASparser;
-import cz.mallat.uasparser.UserAgentInfo;
+import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
 
 public class BrowserMobHttpClient {
     private static final int BUFFER = 4096;
@@ -415,6 +375,7 @@ public class BrowserMobHttpClient {
             if (uaHeaders != null && uaHeaders.length > 0) {
                 String userAgent = uaHeaders[0].getValue();
                 try {
+                    // note: this doesn't work for 'Fandango/4.5.1 CFNetwork/548.1.4 Darwin/11.0.0'
                     UASparser p = new CachingOnlineUpdateUASparser();
                     UserAgentInfo uai = p.parse(userAgent);
                     String name = uai.getUaName();
@@ -659,7 +620,6 @@ public class BrowserMobHttpClient {
             }
         }
 
-        /* TODO
         if (captureContent) {
             // can we understand the POST data at all?
             if (method instanceof HttpEntityEnclosingRequestBase && req.getCopy() != null) {
@@ -673,25 +633,14 @@ public class BrowserMobHttpClient {
                             List<NameValuePair> result = new ArrayList<NameValuePair>();
                             URLEncodedUtils.parse(result, new Scanner(content), null);
 
-                            HashMap<String, String[]> params = new HashMap<String, String[]>();
-                            obj.setPostParams(params);
-                            for (NameValuePair nvp : result) {
-                                String[] values = params.get(nvp.getName());
-                                String value = nvp.getValue();
-                                if (value == null) {
-                                    value = "";
-                                }
+                            HarPostData data = new HarPostData();
+                            entry.getRequest().setPostData(data);
 
-                                if (values == null) {
-                                    values = new String[]{value};
-                                    params.put(nvp.getName(), values);
-                                } else {
-                                    String[] oldValues = values;
-                                    values = new String[oldValues.length + 1];
-                                    System.arraycopy(oldValues, 0, values, 0, oldValues.length);
-                                    values[oldValues.length] = value;
-                                    params.put(nvp.getName(), values);
-                                }
+                            ArrayList<HarPostDataParam> params = new ArrayList<HarPostDataParam>();
+                            data.setParams(params);
+
+                            for (NameValuePair pair : result) {
+                                params.add(new HarPostDataParam(pair.getName(), pair.getValue()));
                             }
                         }
                     } catch (Exception e) {
@@ -700,8 +649,7 @@ public class BrowserMobHttpClient {
                 }
             }
         }
-        */
-        
+
         //capture request cookies       
         List<Cookie> cookies = (List<Cookie>) ctx.getAttribute("browsermob.http.request.cookies");        
         if (cookies != null) {

@@ -9,6 +9,14 @@ public class HarPostDataParam {
     private String fileName;
     private String contentType;
 
+    public HarPostDataParam() {
+    }
+
+    public HarPostDataParam(String name, String value) {
+        this.name = name;
+        this.value = value;
+    }
+
     public String getName() {
         return name;
     }
