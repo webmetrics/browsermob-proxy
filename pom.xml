@@ -202,12 +202,10 @@
             <version>1.8.2</version>
         </dependency>
 
-        <!-- IMPORTANT: do not change this org.bouncycastle:bcprov-jdk16:1.46 even though it seems like we should!
-                        for some (unknown) reason, SSL support just doesn't work with the newer version. -->
         <dependency>
-            <groupId>bouncycastle</groupId>
-            <artifactId>bcprov-jdk15</artifactId>
-            <version>135</version>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
+            <version>1.47</version>
         </dependency>
 
         <dependency>
