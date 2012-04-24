@@ -211,8 +211,12 @@ public class ProxyServer {
             @Override
             public boolean checkCondition(long elapsedTimeInMs) {
                 Date lastCompleted = null;
+                Har har = client.getHar();
+                if (har == null || har.getLog() == null) {
+                    return true;
+                }
 
-                for (HarEntry entry : client.getHar().getLog().getEntries()) {
+                for (HarEntry entry : har.getLog().getEntries()) {
                     // if there is an active request, just stop looking
                     if (entry.getResponse().getStatus() < 0) {
                         return false;
