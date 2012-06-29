@@ -141,8 +141,8 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
         try {
             String urlStr = url.toString();
 
-            // We don't want localhost or selenium-related showing up in the detailed transaction logs
-            if (urlStr.startsWith("http://localhost") || urlStr.contains("/selenium-server/")) {
+            // We don't want selenium-related showing up in the detailed transaction logs
+            if (urlStr.contains("/selenium-server/")) {
                 return super.proxyPlainTextRequest(url, pathInContext, pathParams, request, response);
             }
 
