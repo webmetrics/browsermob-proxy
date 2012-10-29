@@ -79,10 +79,8 @@ public class StreamManager implements BandwidthLimiter {
     private double actualPayloadPercentage = 0.95;
     private boolean enabled = false;
 
-    //this is the overall threshold the stream manager
-    //won't allow to go over.
-    //this parameter can be changed ONLY by other package classes
-    //by calling setMaxBitsPerSecondThreshold
+    //this is the overall threshold the stream manager won't ever allow to go over.
+    //even calls to setDownstreamKbps and setUpstreamKbps will be forced to honor this upperbound.
     private long maxBytesPerSecond;
 
     private StreamParams downStream = new StreamParams();
@@ -159,7 +157,7 @@ public class StreamManager implements BandwidthLimiter {
 
     /**
      * To take into account overhead due to underlying protocols (e.g. TCP/IP)
-     * @param payloadPercentage a  ] 0 , 100] value. where 1 means that the required
+     * @param payloadPercentage a  ] 0 , 100] value. where 100 means that the required
      *                          downstream/upstream bandwidth will be full used for
      *                          sending payload.
      *                          Default value is 95%.
