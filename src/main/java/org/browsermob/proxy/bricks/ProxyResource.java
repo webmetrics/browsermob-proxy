@@ -14,6 +14,7 @@ import com.google.sitebricks.http.Put;
 import org.browsermob.core.har.Har;
 import org.browsermob.proxy.ProxyManager;
 import org.browsermob.proxy.ProxyServer;
+import org.java_bandwidthlimiter.StreamManager;
 
 import java.util.Hashtable;
 import java.util.Map;
@@ -126,23 +127,41 @@ public class ProxyResource {
     @At("/:port/limit")
     public Reply<?> limit(@Named("port") int port, Request request) {
         ProxyServer proxy = proxyManager.get(port);
+        StreamManager streamManager = proxy.getStreamManager();
         String upstreamKbps = request.param("upstreamKbps");
         if (upstreamKbps != null) {
             try {
-                proxy.setUpstreamKbps(Integer.parseInt(upstreamKbps));
+                streamManager.setUpstreamKbps(Integer.parseInt(upstreamKbps));
+                streamManager.enable();
             } catch (NumberFormatException e) { }
         }
         String downstreamKbps = request.param("downstreamKbps");
         if (downstreamKbps != null) {
             try {
-                proxy.setDownstreamKbps(Integer.parseInt(downstreamKbps));
+                streamManager.setDownstreamKbps(Integer.parseInt(downstreamKbps));
+                streamManager.enable();
             } catch (NumberFormatException e) { }
         }
         String latency = request.param("latency");
         if (latency != null) {
             try {
-                proxy.setLatency(Integer.parseInt(latency));
+                streamManager.setLatency(Integer.parseInt(latency));
+                streamManager.enable();
             } catch (NumberFormatException e) { }
+        }
+        String payloadPercentage = request.param("payloadPercentage");
+        if (payloadPercentage != null) {
+            try {
+                streamManager.setPayloadPercentage(Integer.parseInt(payloadPercentage));
+            } catch (NumberFormatException e) { }
+        }
+        String enable = request.param("enable");
+        if (enable != null) {
+            if( Boolean.parseBoolean(enable) ) {
+                streamManager.enable();
+            } else {
+                streamManager.disable();
+            }
         }
         return Reply.saying().ok();
     }

@@ -1,5 +1,7 @@
 package org.browsermob.proxy.http;
 
+import org.java_bandwidthlimiter.StreamManager;
+
 import javax.net.ssl.*;
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,25 +14,12 @@ import java.util.Date;
 
 public class SimulatedSSLSocket extends SSLSocket {
     private SSLSocket socket;
-    private long downstreamKbps;
-    private long upstreamKbps;
-    private long latency;
+    private StreamManager streamManager;
     private Date handshakeStart;
-    private RequestInfo requestInfo;
 
-    public SimulatedSSLSocket(SSLSocket socket, long downstreamKbps, long upstreamKbps, long latency) {
-        this.socket = SimulatedSocket.configure(socket);
-        this.downstreamKbps = downstreamKbps;
-        this.upstreamKbps = upstreamKbps;
-        this.latency = latency;
-        this.addHandshakeCompletedListener(new HandshakeCompletedListener() {
-            @Override
-            public void handshakeCompleted(HandshakeCompletedEvent handshakeCompletedEvent) {
-                if (requestInfo != null) {
-                    requestInfo.ssl(handshakeStart, new Date());
-                }
-            }
-        });
+    public SimulatedSSLSocket(SSLSocket socket, StreamManager streamManager) {
+        this.socket = socket;
+        this.streamManager = streamManager;
     }
 
     @Override
@@ -135,12 +124,7 @@ public class SimulatedSSLSocket extends SSLSocket {
 
     @Override
     public void connect(SocketAddress endpoint) throws IOException {
-        Date start = new Date();
-        socket.connect(endpoint);
-        Date end = new Date();
-        RequestInfo.get().connect(start, end);
-        handshakeStart = new Date();
-        requestInfo = RequestInfo.get();
+        this.connect(endpoint, 60000);
     }
 
     @Override
@@ -150,7 +134,15 @@ public class SimulatedSSLSocket extends SSLSocket {
         Date end = new Date();
         RequestInfo.get().connect(start, end);
         handshakeStart = new Date();
-        requestInfo = RequestInfo.get();
+        startHandshake();
+        this.addHandshakeCompletedListener(new HandshakeCompletedListener() {
+            @Override
+            public void handshakeCompleted(HandshakeCompletedEvent handshakeCompletedEvent) {
+                if(handshakeStart != null) {
+                    RequestInfo.get().ssl(handshakeStart, new Date());
+                }
+            }
+        });
     }
 
     @Override
@@ -195,12 +187,12 @@ public class SimulatedSSLSocket extends SSLSocket {
 
     @Override
     public InputStream getInputStream() throws IOException {
-        return new SimulatedInputStream(socket.getInputStream(), downstreamKbps, latency);
+        return streamManager.registerStream(socket.getInputStream());
     }
 
     @Override
     public OutputStream getOutputStream() throws IOException {
-        return new SimulatedOutputStream(socket.getOutputStream(), upstreamKbps, latency);
+        return streamManager.registerStream(socket.getOutputStream());
     }
 
     @Override

@@ -37,6 +37,7 @@ import org.apache.http.protocol.HttpRequestExecutor;
 import org.browsermob.core.har.*;
 import org.browsermob.proxy.util.CappedByteArrayOutputStream;
 import org.browsermob.proxy.util.Log;
+import org.java_bandwidthlimiter.StreamManager;
 import org.eclipse.jetty.util.MultiMap;
 import org.eclipse.jetty.util.UrlEncoded;
 import org.xbill.DNS.Cache;
@@ -86,7 +87,7 @@ public class BrowserMobHttpClient {
     private boolean followRedirects = true;
     private static final int MAX_REDIRECT = 10;
 
-    public BrowserMobHttpClient() {
+    public BrowserMobHttpClient(StreamManager streamManager) {
         HttpParams params = new BasicHttpParams();
 
         // MOB-338: 30 total connections and 6 connections per host matches the behavior in Firefox 3
@@ -97,9 +98,9 @@ public class BrowserMobHttpClient {
         SchemeRegistry schemeRegistry = new SchemeRegistry();
         hostNameResolver = new BrowserMobHostNameResolver(new Cache(DClass.ANY));
 
-        this.socketFactory = new SimulatedSocketFactory(hostNameResolver);
-        schemeRegistry.register(new Scheme("http", socketFactory, 80));
-        this.sslSocketFactory = new TrustingSSLSocketFactory(hostNameResolver);
+        this.socketFactory = new SimulatedSocketFactory(hostNameResolver, streamManager);
+        schemeRegistry.register(new Scheme("http", 80, socketFactory));
+        this.sslSocketFactory = new TrustingSSLSocketFactory(hostNameResolver, streamManager);
         TrustingSSLSocketFactory sslSocketFactory = this.sslSocketFactory;
         sslSocketFactory.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
         schemeRegistry.register(new Scheme("https", sslSocketFactory, 443));
@@ -792,21 +793,6 @@ public class BrowserMobHttpClient {
 
     public void setHarPageRef(String harPageRef) {
         this.harPageRef = harPageRef;
-    }
-
-    public void setDownstreamKbps(long downstreamKbps) {
-        socketFactory.setDownstreamKbps(downstreamKbps);
-        sslSocketFactory.setDownstreamKbps(downstreamKbps);
-    }
-
-    public void setUpstreamKbps(long upstreamKbps) {
-        socketFactory.setUpstreamKbps(upstreamKbps);
-        sslSocketFactory.setUpstreamKbps(upstreamKbps);
-    }
-
-    public void setLatency(long latency) {
-        socketFactory.setLatency(latency);
-        sslSocketFactory.setLatency(latency);
     }
 
     public void setRequestTimeout(int requestTimeout) {

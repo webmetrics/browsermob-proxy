@@ -10,6 +10,8 @@ import org.browsermob.proxy.jetty.http.HttpListener;
 import org.browsermob.proxy.jetty.http.SocketListener;
 import org.browsermob.proxy.jetty.jetty.Server;
 import org.browsermob.proxy.jetty.util.InetAddrPort;
+import org.java_bandwidthlimiter.BandwidthLimiter;
+import org.java_bandwidthlimiter.StreamManager;
 import org.openqa.selenium.Proxy;
 
 import java.net.InetAddress;
@@ -25,6 +27,7 @@ public class ProxyServer {
     private Server server;
     private int port = -1;
     private BrowserMobHttpClient client;
+    private StreamManager streamManager;
     private HarPage currentPage;
     private BrowserMobProxyHandler handler;
     private int pageCount = 1;
@@ -41,6 +44,10 @@ public class ProxyServer {
             throw new IllegalStateException("Must set port before starting");
         }
 
+        //create a stream manager that will be capped to 100 Megabits
+        //remember that by default it is disabled!
+        streamManager = new StreamManager( 100 * BandwidthLimiter.OneMbps );
+
         server = new Server();
         HttpListener listener = new SocketListener(new InetAddrPort(getPort()));
         server.addListener(listener);
@@ -51,10 +58,9 @@ public class ProxyServer {
         handler = new BrowserMobProxyHandler();
         handler.setJettyServer(server);
         handler.setShutdownLock(new Object());
-        client = new BrowserMobHttpClient();
+        client = new BrowserMobHttpClient(streamManager);
         client.prepareForBrowser();
         handler.setHttpClient(client);
-        client.setDownstreamKbps(500 * 1024 * 8);
 
         context.addHandler(handler);
 
@@ -145,16 +151,29 @@ public class ProxyServer {
         client.addResponseInterceptor(i);
     }
 
+    public StreamManager getStreamManager() {
+        return streamManager;
+    }
+
+    //use getStreamManager().setDownstreamKbps instead
+    @Deprecated
     public void setDownstreamKbps(long downstreamKbps) {
-        client.setDownstreamKbps(downstreamKbps);
+        streamManager.setDownstreamKbps(downstreamKbps);
+        streamManager.enable();
     }
 
+    //use getStreamManager().setUpstreamKbps instead
+    @Deprecated
     public void setUpstreamKbps(long upstreamKbps) {
-        client.setUpstreamKbps(upstreamKbps);
+        streamManager.setUpstreamKbps(upstreamKbps);
+        streamManager.enable();
     }
 
+    //use getStreamManager().setLatency instead
+    @Deprecated
     public void setLatency(long latency) {
-        client.setLatency(latency);
+        streamManager.setLatency(latency);
+        streamManager.enable();
     }
 
     public void setRequestTimeout(int requestTimeout) {
