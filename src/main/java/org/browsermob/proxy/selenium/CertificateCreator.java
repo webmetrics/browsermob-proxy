@@ -1,6 +1,5 @@
 package org.browsermob.proxy.selenium;
 
-import org.bouncycastle.asn1.DEREncodable;
 import org.bouncycastle.asn1.DEREncodableVector;
 import org.bouncycastle.asn1.DERObjectIdentifier;
 import org.bouncycastle.asn1.DERSequence;
@@ -230,8 +229,6 @@ public class CertificateCreator {
 	 * @param caCert        The certificate of the signing authority fot the MITM certificate.
 	 * @param caPrivateKey  The private key of the signing authority.
 	 * @param extensionOidsNotToCopy  An optional list of certificate extension OIDs not to copy to the MITM certificate.
-	 * @param criticalCustomExtensions An optional map of critical extension OIDs to add/replace on the MITM certificate.
-	 * @param noncriticalCustomExtensions An optional map of non-critical extension OIDs to add/replace on the MITM certificate.
 	 * @return The new MITM certificate.
 	 * @throws CertificateParsingException
 	 * @throws SignatureException
@@ -246,9 +243,7 @@ public class CertificateCreator {
 			final PublicKey newPubKey,
 			final X509Certificate caCert,
 			final PrivateKey caPrivateKey,
-			Set<String> extensionOidsNotToCopy,
-			Map<String, DEREncodable> criticalCustomExtensions,
-			Map<String, DEREncodable> noncriticalCustomExtensions)
+			Set<String> extensionOidsNotToCopy)
 	throws 	CertificateParsingException,
 			SignatureException,
 			InvalidKeyException,
@@ -259,14 +254,6 @@ public class CertificateCreator {
 		if(extensionOidsNotToCopy == null)
 		{
 			extensionOidsNotToCopy = new HashSet<String>();
-		}
-		if(noncriticalCustomExtensions == null)
-		{
-			noncriticalCustomExtensions = new HashMap<String, DEREncodable>();
-		}
-		if(criticalCustomExtensions == null)
-		{
-			criticalCustomExtensions = new HashMap<String, DEREncodable>();
 		}
 
 		X509V3CertificateGenerator  v3CertGen = new X509V3CertificateGenerator();
@@ -286,8 +273,7 @@ public class CertificateCreator {
 		if(critExts != null) {
 			for (String oid : critExts) {
 				if(!clientCertOidsNeverToCopy.contains(oid)
-						&& !extensionOidsNotToCopy.contains(oid)
-						&& !criticalCustomExtensions.containsKey(oid)) {
+						&& !extensionOidsNotToCopy.contains(oid)) {
 					v3CertGen.copyAndAddExtension(new DERObjectIdentifier(oid), true, originalCert);
 				}
 			}
@@ -298,19 +284,10 @@ public class CertificateCreator {
 			for(String oid: nonCritExs) {
 
 				if(!clientCertOidsNeverToCopy.contains(oid)
-						&& !extensionOidsNotToCopy.contains(oid)
-						&& !noncriticalCustomExtensions.containsKey(oid)){
+						&& !extensionOidsNotToCopy.contains(oid)){
 					v3CertGen.copyAndAddExtension(new DERObjectIdentifier(oid), false, originalCert);
 				}
 			}
-		}
-
-		for(Map.Entry<String, DEREncodable> customExtension: criticalCustomExtensions.entrySet()) {
-			v3CertGen.addExtension(customExtension.getKey(), true, customExtension.getValue());
-		}
-
-		for(Map.Entry<String, DEREncodable> customExtension: noncriticalCustomExtensions.entrySet()) {
-			v3CertGen.addExtension(customExtension.getKey(), false, customExtension.getValue());
 		}
 
 		v3CertGen.addExtension(
@@ -359,7 +336,7 @@ public class CertificateCreator {
 			final PrivateKey caPrivateKey)
 	throws CertificateParsingException, SignatureException, InvalidKeyException, CertificateExpiredException, CertificateNotYetValidException, CertificateException, NoSuchAlgorithmException, NoSuchProviderException
 	{
-		return mitmDuplicateCertificate(originalCert, newPubKey, caCert, caPrivateKey, clientCertDefaultOidsNotToCopy, null, null);
+		return mitmDuplicateCertificate(originalCert, newPubKey, caCert, caPrivateKey, clientCertDefaultOidsNotToCopy);
 	}
 
 	/**
