@@ -2,73 +2,131 @@ package org.browsermob.proxy.http;
 
 import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.conn.scheme.HostNameResolver;
-import org.apache.http.conn.scheme.SocketFactory;
+import org.apache.http.conn.scheme.SchemeSocketFactory;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
+import org.java_bandwidthlimiter.StreamManager;
 
 import java.io.IOException;
-import java.net.InetAddress;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.net.SocketTimeoutException;
+import java.util.Date;
 
-public class SimulatedSocketFactory implements SocketFactory {
-    private final HostNameResolver nameResolver;
-    private long downstreamKbps;
-    private long upstreamKbps;
-    private long latency;
+public class SimulatedSocketFactory implements SchemeSocketFactory {
+    private HostNameResolver hostNameResolver;
+    private StreamManager streamManager;
 
-    public SimulatedSocketFactory(final HostNameResolver nameResolver) {
+    public SimulatedSocketFactory(HostNameResolver hostNameResolver, StreamManager streamManager) {
         super();
-        this.nameResolver = nameResolver;
+        assert hostNameResolver != null;
+        assert streamManager != null;
+        this.hostNameResolver = hostNameResolver;
+        this.streamManager = streamManager;
     }
 
-    public Socket createSocket() {
-        return new SimulatedSocket(new Socket(), downstreamKbps, upstreamKbps, latency);
+    public static <T extends Socket> void configure(T sock) {
+        // Configure the socket to be Load Test Friendly!
+        // If we don't set these, we can easily use up too many sockets, even when we're cleaning/closing the sockets
+        // responsibly. The reason is that they will stick around in TIME_WAIT for some time (ie: 1-4 minutes) and once
+        // they get to 64K (on Linux) or 16K (on Mac) we can't make any more requests. While those limits can be raised
+        // with a configuration setting in the OS, we really don't need to change things globally. We just need to make
+        // sure that when we close a socket it gets ditched right away and doesn't stick around in TIME_WAIT.
+        //
+        // This problem is most easily noticable/problematic for load tests that use a single transaction to issue
+        // one HTTP request and then end the transaction, thereby shutting down the HTTP socket. This can easily create
+        // 64K+ sockets in TIME_WAIT state, preventing any other requests from going out and producing a false-negative
+        // "connection refused" error message.
+        //
+        // For further reading, check out HttpClient's FAQ on this subject:
+        // http://wiki.apache.org/HttpComponents/FrequentlyAskedConnectionManagementQuestions
+        try {
+            sock.setReuseAddress(true);
+            sock.setSoLinger(true, 0);
+        } catch (Exception e) {}
     }
 
-    public Socket connectSocket(Socket sock, String host, int port,
-                                InetAddress localAddress, int localPort,
-                                HttpParams params)
-            throws IOException {
+    @Override
+    public Socket createSocket(HttpParams httpParams) {
+        //Ignoring httpParams
+        //apparently it's only useful to pass through a SOCKS server
+        //see: http://svn.apache.org/repos/asf/httpcomponents/httpclient/trunk/httpclient/src/examples/org/apache/http/examples/client/ClientExecuteSOCKS.java
 
-        if (host == null) {
+        //creating an anonymous class deriving from socket
+        //we just need to override methods for connect to get some metrics
+        //and get-in-out streams to provide throttling
+        Socket newSocket = new Socket() {
+            @Override
+            public void connect(SocketAddress endpoint) throws IOException {
+                Date start = new Date();
+                super.connect(endpoint);
+                Date end = new Date();
+                RequestInfo.get().connect(start, end);
+            }
+            @Override
+            public void connect(SocketAddress endpoint, int timeout) throws IOException {
+                Date start = new Date();
+                super.connect(endpoint, timeout);
+                Date end = new Date();
+                RequestInfo.get().connect(start, end);
+            }
+            @Override
+            public InputStream getInputStream() throws IOException {
+                // whenever this socket is asked for its input stream
+                // we get it ourselves via socket.getInputStream()
+                // and register it to the stream manager so it will
+                // automatically be throttled
+                return streamManager.registerStream(super.getInputStream());
+            }
+            @Override
+            public OutputStream getOutputStream() throws IOException {
+                // whenever this socket is asked for its output stream
+                // we get it ourselves via socket.getOutputStream()
+                // and register it to the stream manager so it will
+                // automatically be throttled
+                return streamManager.registerStream(super.getOutputStream());
+            }
+        };
+        SimulatedSocketFactory.configure(newSocket);
+        return newSocket;
+    }
+
+    @Override
+    public Socket connectSocket(Socket sock, InetSocketAddress remoteAddress, InetSocketAddress localAddress, HttpParams params) throws IOException {
+        if (remoteAddress == null) {
             throw new IllegalArgumentException("Target host may not be null.");
         }
+
         if (params == null) {
             throw new IllegalArgumentException("Parameters may not be null.");
         }
 
-        if (sock == null)
-            sock = createSocket();
+        if (sock == null) {
+            sock = createSocket(null);
+        }
 
-        if ((localAddress != null) || (localPort > 0)) {
+        if ((localAddress != null) ) {
+            sock.bind( localAddress );
+        }
 
-            // we need to bind explicitly
-            if (localPort < 0)
-                localPort = 0; // indicates "any"
-
-            InetSocketAddress isa =
-                    new InetSocketAddress(localAddress, localPort);
-            sock.bind(isa);
+        //TODO: this has to be changed to HttpInetSocketAddress once we upgrade to 4.2.1
+        InetSocketAddress remoteAddr = remoteAddress;
+        if (this.hostNameResolver != null) {
+            remoteAddr = new InetSocketAddress(this.hostNameResolver.resolve(remoteAddress.getHostString()), remoteAddress.getPort());
         }
 
         int timeout = HttpConnectionParams.getConnectionTimeout(params);
 
-        InetSocketAddress remoteAddress;
-        if (this.nameResolver != null) {
-            remoteAddress = new InetSocketAddress(this.nameResolver.resolve(host), port);
-        } else {
-            remoteAddress = new InetSocketAddress(host, port);
-        }
-
         try {
-            sock.connect(remoteAddress, timeout);
+            sock.connect(remoteAddr, timeout);
         } catch (SocketTimeoutException ex) {
             throw new ConnectTimeoutException("Connect to " + remoteAddress + " timed out");
         }
 
-        return new SimulatedSocket(sock, downstreamKbps, upstreamKbps, latency);
+        return sock;
     }
 
     /**
@@ -79,6 +137,7 @@ public class SimulatedSocketFactory implements SocketFactory {
      * @return <code>false</code>
      * @throws IllegalArgumentException if the argument is invalid
      */
+    @Override
     public final boolean isSecure(Socket sock)
             throws IllegalArgumentException {
 
@@ -91,17 +150,5 @@ public class SimulatedSocketFactory implements SocketFactory {
             throw new IllegalArgumentException("Socket is closed.");
         }
         return false;
-    }
-
-    public void setDownstreamKbps(long downstreamKbps) {
-        this.downstreamKbps = downstreamKbps;
-    }
-
-    public void setUpstreamKbps(long upstreamKbps) {
-        this.upstreamKbps = upstreamKbps;
-    }
-
-    public void setLatency(long latency) {
-        this.latency = latency;
     }
 }
