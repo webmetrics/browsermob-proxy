@@ -102,7 +102,7 @@ public class SimulatedSocketFactory implements SchemeSocketFactory {
     private static Method getHostStingOnInetSocketAddress; 
     static {
         try {
-            getHostStingOnInetSocketAddress = InetSocketAddress.class.getMethod("getHostString", new Class[]{});
+            getHostStingOnInetSocketAddress = InetSocketAddress.class.getDeclaredMethod("getHostString", new Class[]{});
         } catch (SecurityException e) {
             throw new RuntimeException("Expecting InetSocketAddress to have a package scoped \"getHostString\" method which returns a String and takes no input", e);
         } catch (NoSuchMethodException e) {
