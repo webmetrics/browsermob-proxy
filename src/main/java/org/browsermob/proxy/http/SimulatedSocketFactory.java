@@ -99,16 +99,16 @@ public class SimulatedSocketFactory implements SchemeSocketFactory {
     /**
      * Prevent unnecessary class inspection at runtime.
      */
-    private static Method getHostStingOnInetSocketAddress; 
+    private static Method getHostStringOnInetSocketAddress; 
     static {
         try {
-            getHostStingOnInetSocketAddress = InetSocketAddress.class.getDeclaredMethod("getHostString", new Class[]{});
+            getHostStringOnInetSocketAddress = InetSocketAddress.class.getDeclaredMethod("getHostString", new Class[]{});
         } catch (SecurityException e) {
             throw new RuntimeException("Expecting InetSocketAddress to have a package scoped \"getHostString\" method which returns a String and takes no input", e);
         } catch (NoSuchMethodException e) {
             throw new RuntimeException("Expecting InetSocketAddress to have a package scoped \"getHostString\" method which returns a String and takes no input", e);
         }
-        getHostStingOnInetSocketAddress.setAccessible(true);
+        getHostStringOnInetSocketAddress.setAccessible(true);
     }
     
     /**
@@ -121,7 +121,7 @@ public class SimulatedSocketFactory implements SchemeSocketFactory {
     private String resolveHostName(InetSocketAddress remoteAddress) {
         String hostString = null;
         try {
-            hostString = (String) getHostStingOnInetSocketAddress.invoke(remoteAddress, new Object[]{});
+            hostString = (String) getHostStringOnInetSocketAddress.invoke(remoteAddress, new Object[]{});
         } catch (InvocationTargetException ite) {
             throw new RuntimeException("Expecting InetSocketAddress to have a package scoped \"getHostString\" method which returns a String and takes no input");
         } catch (IllegalAccessException iae) {
