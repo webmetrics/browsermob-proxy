@@ -7,8 +7,15 @@
     </formats>
     <fileSets>
         <fileSet>
-            <directory>${project.basedir}/target/appassembler</directory>
-            <outputDirectory>/</outputDirectory>
+            <directory>${project.basedir}/target/appassembler/bin</directory>
+            <outputDirectory>/bin</outputDirectory>
+            <lineEnding>keep</lineEnding>
+            <fileMode>0744</fileMode>
+            <directoryMode>0755</directoryMode>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/target/appassembler/lib</directory>
+            <outputDirectory>/lib</outputDirectory>
         </fileSet>
         <fileSet>
             <directory>${project.basedir}/src/main/resources/sslSupport</directory>
