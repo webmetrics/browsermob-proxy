@@ -17,7 +17,6 @@ import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.conn.routing.HttpRoute;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
-import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.cookie.params.CookieSpecPNames;
 import org.apache.http.impl.auth.BasicScheme;
@@ -89,9 +88,6 @@ public class BrowserMobHttpClient {
 
         this.socketFactory = new SimulatedSocketFactory(hostNameResolver, streamManager);
         this.sslSocketFactory = new TrustingSSLSocketFactory(hostNameResolver, streamManager);
-        TrustingSSLSocketFactory sslSocketFactory = this.sslSocketFactory;
-        sslSocketFactory.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
-        schemeRegistry.register(new Scheme("https", sslSocketFactory, 443));
 
         this.sslSocketFactory.setHostnameVerifier(new AllowAllHostnameVerifier());
 
