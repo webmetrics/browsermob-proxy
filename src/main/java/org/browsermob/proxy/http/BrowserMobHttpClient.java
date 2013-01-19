@@ -13,8 +13,6 @@ import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.conn.ClientConnectionRequest;
 import org.apache.http.conn.ConnectionPoolTimeoutException;
 import org.apache.http.conn.ManagedClientConnection;
-import org.apache.http.conn.params.ConnManagerParams;
-import org.apache.http.conn.params.ConnPerRouteBean;
 import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.conn.routing.HttpRoute;
 import org.apache.http.conn.scheme.Scheme;
@@ -27,9 +25,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.impl.cookie.BasicClientCookie;
-import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.CoreConnectionPNames;
-import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.ExecutionContext;
 import org.apache.http.protocol.HttpContext;
@@ -88,24 +84,21 @@ public class BrowserMobHttpClient {
     private static final int MAX_REDIRECT = 10;
 
     public BrowserMobHttpClient(StreamManager streamManager) {
-        HttpParams params = new BasicHttpParams();
-
-        // MOB-338: 30 total connections and 6 connections per host matches the behavior in Firefox 3
-        ConnManagerParams.setMaxTotalConnections(params, 30);
-        ConnPerRouteBean connPerRoute = new ConnPerRouteBean(6);
-        ConnManagerParams.setMaxConnectionsPerRoute(params, connPerRoute);
-
         SchemeRegistry schemeRegistry = new SchemeRegistry();
         hostNameResolver = new BrowserMobHostNameResolver(new Cache(DClass.ANY));
 
         this.socketFactory = new SimulatedSocketFactory(hostNameResolver, streamManager);
-        schemeRegistry.register(new Scheme("http", 80, socketFactory));
         this.sslSocketFactory = new TrustingSSLSocketFactory(hostNameResolver, streamManager);
         TrustingSSLSocketFactory sslSocketFactory = this.sslSocketFactory;
         sslSocketFactory.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
         schemeRegistry.register(new Scheme("https", sslSocketFactory, 443));
 
-        httpClientConnMgr = new ThreadSafeClientConnManager(params, schemeRegistry) {
+        this.sslSocketFactory.setHostnameVerifier(new AllowAllHostnameVerifier());
+
+        schemeRegistry.register(new Scheme("http", 80, socketFactory));
+        schemeRegistry.register(new Scheme("https", 443, sslSocketFactory));
+
+        httpClientConnMgr = new ThreadSafeClientConnManager(schemeRegistry) {
             @Override
             public ClientConnectionRequest requestConnection(HttpRoute route, Object state) {
                 final ClientConnectionRequest wrapped = super.requestConnection(route, state);
@@ -127,7 +120,12 @@ public class BrowserMobHttpClient {
                 };
             }
         };
-        httpClient = new DefaultHttpClient(httpClientConnMgr, params) {
+
+        // MOB-338: 30 total connections and 6 connections per host matches the behavior in Firefox 3
+        httpClientConnMgr.setMaxTotal(30);
+        httpClientConnMgr.setDefaultMaxPerRoute(6);
+
+        httpClient = new DefaultHttpClient(httpClientConnMgr) {
             @Override
             protected HttpRequestExecutor createRequestExecutor() {
                 return new HttpRequestExecutor() {
