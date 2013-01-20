@@ -31,6 +31,7 @@ public class ConfigModule implements Module {
         if (options.has("?")) {
             try {
                 parser.printHelpOn(System.out);
+                System.exit(0);
             } catch (IOException e) {
                 // should never happen, but...
                 e.printStackTrace();
