@@ -79,6 +79,10 @@ Sometimes you will want to route requests through an upstream proxy server. In t
     [~]$ curl -X POST http://localhost:9090/proxy?httpProxy=yourproxyserver.com:8080
     {"port":9091}
 
+Alternatively, you can specify the upstream proxy config for all proxies created using the standard JVM [system properties for HTTP proxies](http://docs.oracle.com/javase/6/docs/technotes/guides/net/proxies.html).
+Note that you can still override the default upstream proxy via the POST payload, but if you omit the payload the JVM
+system properties will be used to specify the upstream proxy.
+
 *TODO*: Other REST APIs supporting all the BrowserMob Proxy features will be added soon.
 
 Embedded Mode

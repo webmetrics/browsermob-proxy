@@ -31,11 +31,16 @@ public class ProxyResource {
 
     @Post
     public Reply<ProxyDescriptor> newProxy(Request request) throws Exception {
+        String systemProxyHost = System.getProperty("http.proxyHost");
+        String systemProxyPort = System.getProperty("http.proxyPort");
         String httpProxy = request.param("httpProxy");
         Hashtable<String, String> options = new Hashtable<String, String>();
 
+        // If the upstream proxy is specified via query params that should override any default system level proxy.
         if (httpProxy != null) {
             options.put("httpProxy", httpProxy);
+        } else if ((systemProxyHost != null) && (systemProxyPort != null)) {
+            options.put("httpProxy", String.format("%s:%s", systemProxyHost, systemProxyPort));
         }
 
         String paramPort = request.param("port");
