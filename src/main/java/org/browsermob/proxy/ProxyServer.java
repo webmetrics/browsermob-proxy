@@ -5,11 +5,14 @@ import org.apache.http.HttpResponseInterceptor;
 import org.browsermob.core.har.*;
 import org.browsermob.core.util.ThreadUtils;
 import org.browsermob.proxy.http.BrowserMobHttpClient;
+import org.browsermob.proxy.http.RequestInterceptor;
+import org.browsermob.proxy.http.ResponseInterceptor;
 import org.browsermob.proxy.jetty.http.HttpContext;
 import org.browsermob.proxy.jetty.http.HttpListener;
 import org.browsermob.proxy.jetty.http.SocketListener;
 import org.browsermob.proxy.jetty.jetty.Server;
 import org.browsermob.proxy.jetty.util.InetAddrPort;
+import org.browsermob.proxy.util.Log;
 import org.java_bandwidthlimiter.BandwidthLimiter;
 import org.java_bandwidthlimiter.StreamManager;
 import org.openqa.selenium.Proxy;
@@ -19,10 +22,12 @@ import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class ProxyServer {
     private static final HarNameVersion CREATOR = new HarNameVersion("BrowserMob Proxy", "2.0");
+    private static final Log LOG = new Log();
 
     private Server server;
     private int port = -1;
@@ -31,6 +36,7 @@ public class ProxyServer {
     private HarPage currentPage;
     private BrowserMobProxyHandler handler;
     private int pageCount = 1;
+    private AtomicInteger requestCounter = new AtomicInteger(0);
 
     public ProxyServer() {
     }
@@ -58,7 +64,7 @@ public class ProxyServer {
         handler = new BrowserMobProxyHandler();
         handler.setJettyServer(server);
         handler.setShutdownLock(new Object());
-        client = new BrowserMobHttpClient(streamManager);
+        client = new BrowserMobHttpClient(streamManager, requestCounter);
         client.prepareForBrowser();
         handler.setHttpClient(client);
 
@@ -98,6 +104,20 @@ public class ProxyServer {
     }
 
     public Har getHar() {
+        // Wait up to 5 seconds for all active requests to cease before returning the HAR.
+        // This helps with race conditions but won't cause deadlocks should a request hang
+        // or error out in an unexpected way (which of course would be a bug!)
+        boolean success = ThreadUtils.waitFor(new ThreadUtils.WaitCondition() {
+            @Override
+            public boolean checkCondition(long elapsedTimeInMs) {
+                return requestCounter.get() == 0;
+            }
+        }, TimeUnit.SECONDS, 5);
+
+        if (!success) {
+            LOG.warn("Waited 5 seconds for requests to cease before returning HAR; giving up!");
+        }
+
         return client.getHar();
     }
 
@@ -143,12 +163,22 @@ public class ProxyServer {
         client.remapHost(source, target);
     }
 
+    @Deprecated
     public void addRequestInterceptor(HttpRequestInterceptor i) {
         client.addRequestInterceptor(i);
     }
 
+    public void addRequestInterceptor(RequestInterceptor interceptor) {
+        client.addRequestInterceptor(interceptor);
+    }
+
+    @Deprecated
     public void addResponseInterceptor(HttpResponseInterceptor i) {
         client.addResponseInterceptor(i);
+    }
+
+    public void addResponseInterceptor(ResponseInterceptor interceptor) {
+        client.addResponseInterceptor(interceptor);
     }
 
     public StreamManager getStreamManager() {

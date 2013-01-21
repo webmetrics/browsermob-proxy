@@ -12,6 +12,7 @@ import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HTTP;
+import org.browsermob.proxy.jetty.http.HttpRequest;
 import org.browsermob.proxy.util.Base64;
 import org.browsermob.proxy.util.ClonedInputStream;
 import org.browsermob.proxy.util.Log;
@@ -38,15 +39,18 @@ public class BrowserMobHttpRequest {
     private OutputStream outputStream;
     private RequestCallback requestCallback;
     private boolean collectAdditionalInfo;
+    private HttpRequest proxyRequest;
     private ByteArrayOutputStream copy;
     private String expectedLocation;
     private boolean multiPart;
 
-    protected BrowserMobHttpRequest(HttpRequestBase method, BrowserMobHttpClient client, int expectedStatusCode, boolean collectAdditionalInfo) {
+    protected BrowserMobHttpRequest(HttpRequestBase method, BrowserMobHttpClient client, int expectedStatusCode,
+                                    boolean collectAdditionalInfo, HttpRequest proxyRequest) {
         this.method = method;
         this.client = client;
         this.expectedStatusCode = expectedStatusCode;
         this.collectAdditionalInfo = collectAdditionalInfo;
+        this.proxyRequest = proxyRequest;
     }
 
     public String getExpectedLocation() {
@@ -108,6 +112,10 @@ public class BrowserMobHttpRequest {
 
     public HttpRequestBase getMethod() {
         return method;
+    }
+
+    public HttpRequest getProxyRequest() {
+        return proxyRequest;
     }
 
     public void makeMultiPart() {

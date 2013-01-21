@@ -4,6 +4,10 @@ import cz.mallat.uasparser.CachingOnlineUpdateUASparser;
 import cz.mallat.uasparser.UASparser;
 import cz.mallat.uasparser.UserAgentInfo;
 import org.apache.http.*;
+import org.apache.http.HttpConnection;
+import org.apache.http.HttpException;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
 import org.apache.http.auth.*;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.*;
@@ -30,8 +34,7 @@ import org.apache.http.protocol.ExecutionContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestExecutor;
 import org.browsermob.core.har.*;
-import org.browsermob.proxy.util.CappedByteArrayOutputStream;
-import org.browsermob.proxy.util.Log;
+import org.browsermob.proxy.util.*;
 import org.java_bandwidthlimiter.StreamManager;
 import org.eclipse.jetty.util.MultiMap;
 import org.eclipse.jetty.util.UrlEncoded;
@@ -45,6 +48,7 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
@@ -67,7 +71,9 @@ public class BrowserMobHttpClient {
     private List<BlacklistEntry> blacklistEntries = null;
     private WhitelistEntry whitelistEntry = null;
     private List<RewriteRule> rewriteRules = new CopyOnWriteArrayList<RewriteRule>();
-    private HashMap<String, String> additionalHeaders = new HashMap();
+    private List<RequestInterceptor> requestInterceptors = new CopyOnWriteArrayList<RequestInterceptor>();
+    private List<ResponseInterceptor> responseInterceptors = new CopyOnWriteArrayList<ResponseInterceptor>();
+    private HashMap<String, String> additionalHeaders = new LinkedHashMap<String, String>();
     private int requestTimeout;
     private AtomicBoolean allowNewRequests = new AtomicBoolean(true);
     private BrowserMobHostNameResolver hostNameResolver;
@@ -81,8 +87,10 @@ public class BrowserMobHttpClient {
 
     private boolean followRedirects = true;
     private static final int MAX_REDIRECT = 10;
+    private AtomicInteger requestCounter;
 
-    public BrowserMobHttpClient(StreamManager streamManager) {
+    public BrowserMobHttpClient(StreamManager streamManager, AtomicInteger requestCounter) {
+        this.requestCounter = requestCounter;
         SchemeRegistry schemeRegistry = new SchemeRegistry();
         hostNameResolver = new BrowserMobHostNameResolver(new Cache(DClass.ANY));
 
@@ -167,12 +175,22 @@ public class BrowserMobHttpClient {
         hostNameResolver.remap(source, target);
     }
 
+    @Deprecated
     public void addRequestInterceptor(HttpRequestInterceptor i) {
         httpClient.addRequestInterceptor(i);
     }
 
+    public void addRequestInterceptor(RequestInterceptor interceptor) {
+        requestInterceptors.add(interceptor);
+    }
+
+    @Deprecated
     public void addResponseInterceptor(HttpResponseInterceptor i) {
         httpClient.addResponseInterceptor(i);
+    }
+
+    public void addResponseInterceptor(ResponseInterceptor interceptor) {
+        responseInterceptors.add(interceptor);
     }
 
     public void createCookie(String name, String value, String domain) {
@@ -217,55 +235,55 @@ public class BrowserMobHttpClient {
         return null;
     }
 
-    public BrowserMobHttpRequest newPost(String url) {
+    public BrowserMobHttpRequest newPost(String url, org.browsermob.proxy.jetty.http.HttpRequest proxyRequest) {
         try {
             URI uri = makeUri(url);
-            return new BrowserMobHttpRequest(new HttpPost(uri), this, -1, captureContent);
+            return new BrowserMobHttpRequest(new HttpPost(uri), this, -1, captureContent, proxyRequest);
         } catch (URISyntaxException e) {
             throw reportBadURI(url, "POST");
         }
     }
 
-    public BrowserMobHttpRequest newGet(String url) {
+    public BrowserMobHttpRequest newGet(String url, org.browsermob.proxy.jetty.http.HttpRequest proxyRequest) {
         try {
             URI uri = makeUri(url);
-            return new BrowserMobHttpRequest(new HttpGet(uri), this, -1, captureContent);
+            return new BrowserMobHttpRequest(new HttpGet(uri), this, -1, captureContent, proxyRequest);
         } catch (URISyntaxException e) {
             throw reportBadURI(url, "GET");
         }
     }
 
-    public BrowserMobHttpRequest newPut(String url) {
+    public BrowserMobHttpRequest newPut(String url, org.browsermob.proxy.jetty.http.HttpRequest proxyRequest) {
         try {
             URI uri = makeUri(url);
-            return new BrowserMobHttpRequest(new HttpPut(uri), this, -1, captureContent);
+            return new BrowserMobHttpRequest(new HttpPut(uri), this, -1, captureContent, proxyRequest);
         } catch (Exception e) {
             throw reportBadURI(url, "PUT");
         }
     }
 
-    public BrowserMobHttpRequest newDelete(String url) {
+    public BrowserMobHttpRequest newDelete(String url, org.browsermob.proxy.jetty.http.HttpRequest proxyRequest) {
         try {
             URI uri = makeUri(url);
-            return new BrowserMobHttpRequest(new HttpDelete(uri), this, -1, captureContent);
+            return new BrowserMobHttpRequest(new HttpDelete(uri), this, -1, captureContent, proxyRequest);
         } catch (URISyntaxException e) {
             throw reportBadURI(url, "DELETE");
         }
     }
 
-    public BrowserMobHttpRequest newOptions(String url) {
+    public BrowserMobHttpRequest newOptions(String url, org.browsermob.proxy.jetty.http.HttpRequest proxyRequest) {
         try {
             URI uri = makeUri(url);
-            return new BrowserMobHttpRequest(new HttpOptions(uri), this, -1, captureContent);
+            return new BrowserMobHttpRequest(new HttpOptions(uri), this, -1, captureContent, proxyRequest);
         } catch (URISyntaxException e) {
             throw reportBadURI(url, "OPTIONS");
         }
     }
 
-    public BrowserMobHttpRequest newHead(String url) {
+    public BrowserMobHttpRequest newHead(String url, org.browsermob.proxy.jetty.http.HttpRequest proxyRequest) {
         try {
             URI uri = makeUri(url);
-            return new BrowserMobHttpRequest(new HttpHead(uri), this, -1, captureContent);
+            return new BrowserMobHttpRequest(new HttpHead(uri), this, -1, captureContent, proxyRequest);
         } catch (URISyntaxException e) {
             throw reportBadURI(url, "HEAD");
         }
@@ -345,8 +363,20 @@ public class BrowserMobHttpClient {
         }
 
         try {
-            return execute(req, 1);
+            requestCounter.incrementAndGet();
+
+            for (RequestInterceptor interceptor : requestInterceptors) {
+                interceptor.process(req);
+            }
+
+            BrowserMobHttpResponse response = execute(req, 1);
+            for (ResponseInterceptor interceptor : responseInterceptors) {
+                interceptor.process(response);
+            }
+
+            return response;
         } finally {
+            requestCounter.decrementAndGet();
         }
     }
 
@@ -551,6 +581,10 @@ public class BrowserMobHttpClient {
                         }
                     }
 
+                    if (captureContent) {
+                        os = new ClonedOutputStream(os);
+                    }
+
                     bytes = copyWithStats(is, os);
                 }
             }
@@ -661,6 +695,19 @@ public class BrowserMobHttpClient {
                 Header contentTypeHdr = response.getFirstHeader("Content-Type");
                 if (contentTypeHdr != null) {
                     contentType = contentTypeHdr.getValue();
+                    entry.getResponse().getContent().setMimeType(contentType);
+
+                    if (captureContent && os != null && os instanceof ClonedOutputStream) {
+                        ByteArrayOutputStream copy = ((ClonedOutputStream) os).getOutput();
+
+                        if (contentType != null && contentType.startsWith("text/")) {
+                            entry.getResponse().getContent().setText(new String(copy.toByteArray()));
+                        } else {
+                            entry.getResponse().getContent().setText(Base64.byteArrayToBase64(copy.toByteArray()));
+                        }
+                    }
+
+
                     NameValuePair nvp = contentTypeHdr.getElements()[0].getParameterByName("charset");
 
                     if (nvp != null) {

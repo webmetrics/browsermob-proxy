@@ -173,17 +173,17 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
 
             BrowserMobHttpRequest httpReq = null;
             if ("GET".equals(request.getMethod())) {
-                httpReq = httpClient.newGet(urlStr);
+                httpReq = httpClient.newGet(urlStr, request);
             } else if ("POST".equals(request.getMethod())) {
-                httpReq = httpClient.newPost(urlStr);
+                httpReq = httpClient.newPost(urlStr, request);
             } else if ("PUT".equals(request.getMethod())) {
-                httpReq = httpClient.newPut(urlStr);
+                httpReq = httpClient.newPut(urlStr, request);
             } else if ("DELETE".equals(request.getMethod())) {
-                httpReq = httpClient.newDelete(urlStr);
+                httpReq = httpClient.newDelete(urlStr, request);
             } else if ("OPTIONS".equals(request.getMethod())) {
-                httpReq = httpClient.newOptions(urlStr);
+                httpReq = httpClient.newOptions(urlStr, request);
             } else if ("HEAD".equals(request.getMethod())) {
-                httpReq = httpClient.newHead(urlStr);
+                httpReq = httpClient.newHead(urlStr, request);
             } else {
                 LOG.warn("Unexpected request method %s, giving up", request.getMethod());
                 request.setHandled(true);
