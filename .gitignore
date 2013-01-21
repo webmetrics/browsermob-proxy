@@ -7,3 +7,4 @@ target
 /.project
 /.idea
 atlassian-ide-plugin.xml
+.DS_Store
