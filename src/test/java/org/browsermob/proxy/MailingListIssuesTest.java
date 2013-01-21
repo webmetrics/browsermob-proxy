@@ -75,6 +75,21 @@ public class MailingListIssuesTest {
     }
 
     @Test
+    public void testThatWeCanChangeTheUserAgent() throws IOException, InterruptedException {
+        proxy.addRequestInterceptor(new RequestInterceptor() {
+            @Override
+            public void process(BrowserMobHttpRequest request) {
+                request.getMethod().removeHeaders("User-Agent");
+                request.getMethod().addHeader("User-Agent", "Bananabot/1.0");
+            }
+        });
+
+        String body = IOUtils.readFully(client.execute(new HttpGet("http://127.0.0.1:8080/a.txt")).getEntity().getContent());
+
+        Assert.assertTrue(body.contains("this is a.txt"));
+    }
+
+    @Test
     public void testThatInterceptorsCanRewriteUrls() throws IOException, InterruptedException {
         proxy.addRequestInterceptor(new RequestInterceptor() {
             @Override

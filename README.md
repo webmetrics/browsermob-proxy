@@ -93,7 +93,7 @@ If you're using Java and Selenium, the easiest way to get started is to embed th
     <dependency>
         <groupId>biz.neustar</groupId>
         <artifactId>browsermob-proxy</artifactId>
-        <version>LATEST_VERSION (ex: 2.0-beta-6)</version>
+        <version>LATEST_VERSION (ex: 2.0-beta-7)</version>
         <scope>test</scope>
     </dependency>
 
@@ -109,7 +109,7 @@ If your project already defines a Selenium dependency then you may want to exclu
     <dependency>
         <groupId>biz.neustar</groupId>
         <artifactId>browsermob-proxy</artifactId>
-        <version>LATEST_VERSION (ex: 2.0-beta-6)</version>
+        <version>LATEST_VERSION (ex: 2.0-beta-7)</version>
         <scope>test</scope>
         <exclusions>
             <exclusion>
@@ -154,15 +154,13 @@ HTTP Request Manipulation
 
 While not yet available via the REST interface, you can manipulate the requests like so:
 
-    server.addRequestInterceptor(new HttpRequestInterceptor() {
+    server.addRequestInterceptor(new RequestInterceptor() {
         @Override
-        public void process(HttpRequest request, HttpContext context) throws HttpException, IOException {
-            request.removeHeaders("User-Agent");
-            request.addHeader("User-Agent", "Bananabot/1.0");
+        public void process(BrowserMobHttpRequest request) {
+            request.getMethod().removeHeaders("User-Agent");
+            request.getMethod().addHeader("User-Agent", "Bananabot/1.0");
         }
     });
-
-The interceptor is the type `org.apache.http.HttpRequestInterceptor`, which is part of the [Apache HTTP Client](http://hc.apache.org/httpcomponents-client-ga/) project. You can consult the API docs for the full set of options available to you in the interceptor.
 
 We will soon be adding support for this advanced capability in the REST interface as well, using JavaScript snippets that can be posted as the interceptor code.
 
