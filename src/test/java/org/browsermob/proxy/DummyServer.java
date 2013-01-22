@@ -13,6 +13,7 @@ import java.io.IOException;
 public class DummyServer {
     private int port;
     private Server server = new Server();
+    private ResourceHandler handler;
 
     public DummyServer(int port) {
         this.port = port;
@@ -25,9 +26,14 @@ public class DummyServer {
         context.setContextPath("/");
         context.setBaseResource(Resource.newResource("src/test/dummy-server"));
         server.addContext(context);
-        context.addHandler(new ResourceHandler());
+        handler = new ResourceHandler();
+        context.addHandler(handler);
 
         server.start();
+    }
+
+    public ResourceHandler getHandler() {
+        return handler;
     }
 
     public void stop() throws InterruptedException {

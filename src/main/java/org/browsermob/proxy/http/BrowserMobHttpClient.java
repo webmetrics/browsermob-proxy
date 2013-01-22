@@ -52,6 +52,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 public class BrowserMobHttpClient {
     private static final int BUFFER = 4096;
@@ -476,6 +477,7 @@ public class BrowserMobHttpClient {
         InputStream is = null;
         int statusCode = -998;
         long bytes = 0;
+        boolean gzipping = false;
         boolean contentMatched = true;
         OutputStream os = req.getOutputStream();
         if (os == null) {
@@ -573,16 +575,20 @@ public class BrowserMobHttpClient {
 
                 // check for null (resp 204 can cause HttpClient to return null, which is what Google does with http://clients1.google.com/generate_204)
                 if (is != null) {
+                    Header contentEncodingHeader = response.getFirstHeader("Content-Encoding");
+                    if (contentEncodingHeader != null && "gzip".equalsIgnoreCase(contentEncodingHeader.getValue())) {
+                        gzipping = true;
+                    }
+
                     // deal with GZIP content!
-                    if (decompress) {
-                        Header contentEncodingHeader = response.getFirstHeader("Content-Encoding");
-                        if (contentEncodingHeader != null && "gzip".equalsIgnoreCase(contentEncodingHeader.getValue())) {
-                            is = new GZIPInputStream(is);
-                        }
+                    if (decompress && gzipping) {
+                        is = new GZIPInputStream(is);
                     }
 
                     if (captureContent) {
+                        // todo - something here?
                         os = new ClonedOutputStream(os);
+
                     }
 
                     bytes = copyWithStats(is, os);
@@ -699,6 +705,17 @@ public class BrowserMobHttpClient {
 
                     if (captureContent && os != null && os instanceof ClonedOutputStream) {
                         ByteArrayOutputStream copy = ((ClonedOutputStream) os).getOutput();
+
+                        if (gzipping) {
+                            // ok, we need to decompress it before we can put it in the har file
+                            try {
+                                InputStream temp = new GZIPInputStream(new ByteArrayInputStream(copy.toByteArray()));
+                                copy = new ByteArrayOutputStream();
+                                IOUtils.copy(temp, copy);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
 
                         if (contentType != null && contentType.startsWith("text/")) {
                             entry.getResponse().getContent().setText(new String(copy.toByteArray()));
