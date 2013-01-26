@@ -500,7 +500,7 @@ public class BrowserMobHttpClient {
             har.getLog().addEntry(entry);
         }
         
-    	String query = method.getURI().getQuery();
+    	String query = method.getURI().getRawQuery();
     	if (query != null) {
 	        MultiMap<String> params = new MultiMap<String>();
 	        UrlEncoded.decodeTo(query, params, "UTF-8");
