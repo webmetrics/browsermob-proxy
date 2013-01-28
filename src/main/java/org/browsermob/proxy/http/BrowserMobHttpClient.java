@@ -55,9 +55,27 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 public class BrowserMobHttpClient {
-    private static final int BUFFER = 4096;
-
     private static final Log LOG = new Log();
+    public static UASparser PARSER = null;
+
+    static {
+        try {
+            PARSER = new CachingOnlineUpdateUASparser();
+        } catch (IOException e) {
+            LOG.severe("Unable to create User-Agent parser, falling back but proxy is in damaged state and should be restarted", e);
+            try {
+                PARSER = new UASparser();
+            } catch (Exception e1) {
+                // ignore
+            }
+        }
+    }
+
+    public static void setUserAgentParser(UASparser parser) {
+        PARSER = parser;
+    }
+
+    private static final int BUFFER = 4096;
 
     private Har har;
     private String harPageRef;
@@ -402,8 +420,7 @@ public class BrowserMobHttpClient {
                 String userAgent = uaHeaders[0].getValue();
                 try {
                     // note: this doesn't work for 'Fandango/4.5.1 CFNetwork/548.1.4 Darwin/11.0.0'
-                    UASparser p = new CachingOnlineUpdateUASparser();
-                    UserAgentInfo uai = p.parse(userAgent);
+                    UserAgentInfo uai = PARSER.parse(userAgent);
                     String name = uai.getUaName();
                     int lastSpace = name.lastIndexOf(' ');
                     String browser = name.substring(0, lastSpace);

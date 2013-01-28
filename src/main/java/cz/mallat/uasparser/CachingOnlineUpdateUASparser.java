@@ -67,7 +67,7 @@ public class CachingOnlineUpdateUASparser extends OnlineUpdateUASparser {
 	 */
 	@Override
 	protected synchronized void checkDataMaps() throws IOException {
-		if (lastUpdateCheck == 0 || lastUpdateCheck < System.currentTimeMillis() - UPDATE_INTERVAL) {
+		if (lastUpdateCheck == 0 || lastUpdateCheck < System.currentTimeMillis() - updateInterval) {
 			String versionOnServer = getVersionFromServer();
 			if (currentVersion == null || versionOnServer.compareTo(currentVersion) > 0) {
 				loadDataFromInternetAndSave();

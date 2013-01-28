@@ -15,17 +15,21 @@ public class OnlineUpdateUASparser extends UASparser {
 
 	protected static final String DATA_RETRIVE_URL = "http://user-agent-string.info/rpc/get_data.php?key=free&format=ini";
 	protected static final String VERSION_CHECK_URL = "http://user-agent-string.info/rpc/get_data.php?key=free&format=ini&ver=y";
-	protected static final long UPDATE_INTERVAL = 1000 * 60 * 60 * 24; // 1 day
+	protected long updateInterval = 1000 * 60 * 60 * 24; // 1 day
 
 	protected long lastUpdateCheck;
 	protected String currentVersion;
 
-	/**
+    public void setUpdateInterval(long updateInterval) {
+        this.updateInterval = updateInterval;
+    }
+
+    /**
 	 * Since we've online access to the data file, we check every day for an update
 	 */
 	@Override
 	protected synchronized void checkDataMaps() throws IOException {
-		if (lastUpdateCheck == 0 || lastUpdateCheck < System.currentTimeMillis() - UPDATE_INTERVAL) {
+		if (lastUpdateCheck == 0 || lastUpdateCheck < System.currentTimeMillis() - updateInterval) {
 			String versionOnServer = getVersionFromServer();
 			if (currentVersion == null || versionOnServer.compareTo(currentVersion) > 0) {
 				loadDataFromInternet();
