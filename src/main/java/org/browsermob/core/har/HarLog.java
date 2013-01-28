@@ -7,7 +7,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 public class HarLog {
-    private String version = "1.1";
+    private String version = "1.2";
     private HarNameVersion creator;
     private HarNameVersion browser;
     private List<HarPage> pages = new CopyOnWriteArrayList<HarPage>();
