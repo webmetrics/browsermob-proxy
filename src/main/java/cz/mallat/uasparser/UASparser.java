@@ -27,7 +27,7 @@ public class UASparser {
 	private Map<Long, String> browserTypeMap;
 	private Map<String, Long> browserRegMap;
 	private Map<Long, Long> browserOsMap;
-	private Map<String, Long> osRegMap;
+	private Map<Pattern, Long> osRegMap;
 
 	/**
 	 * Use the given filename to load the definition file from the local filesystem
@@ -102,9 +102,8 @@ public class UASparser {
 	 * @param retObj
 	 */
 	private void processOsRegex(String useragent, UserAgentInfo retObj) {
-		for (Map.Entry<String, Long> entry : osRegMap.entrySet()) {
-			Pattern pattern = Pattern.compile(entry.getKey(), Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-			Matcher matcher = pattern.matcher(useragent);
+		for (Map.Entry<Pattern, Long> entry : osRegMap.entrySet()) {
+			Matcher matcher = entry.getKey().matcher(useragent);
 			if (matcher.find()) {
 				// simply copy the OS data into the result object
 				Long idOs = entry.getValue();
@@ -272,10 +271,11 @@ public class UASparser {
 				}
 				browserOsMap = browserOsMapTmp;
 			} else if ("os_reg".equals(sec.getName())) {
-				Map<String, Long> osRegMapTmp = new LinkedHashMap<String, Long>();
+				Map<Pattern, Long> osRegMapTmp = new LinkedHashMap<Pattern, Long>();
 				for (Entry en : sec.getEntries()) {
 					Iterator<String> it = en.getData().iterator();
-					osRegMapTmp.put(convertPerlToJavaRegex(it.next()), Long.parseLong(it.next()));
+                    Pattern pattern = Pattern.compile(convertPerlToJavaRegex(it.next()), Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+					osRegMapTmp.put(pattern, Long.parseLong(it.next()));
 				}
 				osRegMap = osRegMapTmp;
 			}
