@@ -1,10 +1,15 @@
 package org.browsermob.proxy;
 
 import junit.framework.Assert;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.params.ConnRoutePNames;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
 import org.browsermob.core.har.*;
 import org.browsermob.proxy.http.BrowserMobHttpRequest;
 import org.browsermob.proxy.http.RequestInterceptor;
@@ -20,6 +25,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
@@ -134,6 +140,68 @@ public class MailingListIssuesTest {
         Assert.assertEquals("Mime not matched", "text/plain", mime);
         String text = content.getText();
         Assert.assertEquals("Text not matched", "this is a.txt", text);
+    }
+
+    @Test
+    public void testThatProxyCanCaptureJsonRpc() throws IOException, InterruptedException {
+        proxy.setCaptureContent(true);
+        proxy.newHar("Test");
+
+        HttpPost post = new HttpPost("http://127.0.0.1:8080/jsonrpc/");
+        HttpEntity entity = new StringEntity("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"test\",\"params\":{}}");
+        post.setEntity(entity);
+    	post.addHeader("Accept", "application/json-rpc");
+    	post.addHeader("Content-Type", "application/json; charset=UTF-8");
+    
+        String body = IOUtils.readFully(client.execute(post).getEntity().getContent());
+
+        Assert.assertTrue(body.contains("{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{}}"));
+
+        Har har = proxy.getHar();
+        Assert.assertNotNull("Har is null", har);
+        HarLog log = har.getLog();
+        Assert.assertNotNull("Log is null", log);
+        List<HarEntry> entries = log.getEntries();
+        Assert.assertNotNull("Entries are null", entries);
+        HarEntry entry = entries.get(0);
+        Assert.assertNotNull("No entry found", entry);
+        HarResponse response = entry.getResponse();
+        Assert.assertNotNull("Response is null", response);
+        HarRequest request = entry.getRequest();
+        Assert.assertNotNull("Request is null", request);
+        HarPostData postdata = request.getPostData();
+        Assert.assertNotNull("PostData is null", postdata);
+        Assert.assertTrue(postdata.getText().contains("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"test\",\"params\":{}}"));
+    }
+
+    @Test
+    public void testThatTraditionalPostParamsAreCaptured() throws IOException, InterruptedException {
+        proxy.setCaptureContent(true);
+        proxy.newHar("Test");
+
+        HttpPost post = new HttpPost("http://127.0.0.1:8080/jsonrpc/");
+        post.setEntity(new UrlEncodedFormEntity(Collections.singletonList(new BasicNameValuePair("foo", "bar"))));
+
+        IOUtils.readFully(client.execute(post).getEntity().getContent());
+
+        Har har = proxy.getHar();
+        Assert.assertNotNull("Har is null", har);
+        HarLog log = har.getLog();
+        Assert.assertNotNull("Log is null", log);
+        List<HarEntry> entries = log.getEntries();
+        Assert.assertNotNull("Entries are null", entries);
+        HarEntry entry = entries.get(0);
+        Assert.assertNotNull("No entry found", entry);
+        HarResponse response = entry.getResponse();
+        Assert.assertNotNull("Response is null", response);
+        HarRequest request = entry.getRequest();
+        Assert.assertNotNull("Request is null", request);
+        HarPostData postdata = request.getPostData();
+        Assert.assertNotNull("PostData is null", postdata);
+        Assert.assertEquals("application/x-www-form-urlencoded; charset=ISO-8859-1", postdata.getMimeType());
+        Assert.assertEquals(1, postdata.getParams().size());
+        Assert.assertEquals("foo", postdata.getParams().get(0).getName());
+        Assert.assertEquals("bar", postdata.getParams().get(0).getValue());
     }
 
     @Test

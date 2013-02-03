@@ -4,10 +4,6 @@ import cz.mallat.uasparser.CachingOnlineUpdateUASparser;
 import cz.mallat.uasparser.UASparser;
 import cz.mallat.uasparser.UserAgentInfo;
 import org.apache.http.*;
-import org.apache.http.HttpConnection;
-import org.apache.http.HttpException;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
 import org.apache.http.auth.*;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.*;
@@ -35,9 +31,9 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpRequestExecutor;
 import org.browsermob.core.har.*;
 import org.browsermob.proxy.util.*;
-import org.java_bandwidthlimiter.StreamManager;
 import org.eclipse.jetty.util.MultiMap;
 import org.eclipse.jetty.util.UrlEncoded;
+import org.java_bandwidthlimiter.StreamManager;
 import org.xbill.DNS.Cache;
 import org.xbill.DNS.DClass;
 
@@ -52,7 +48,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 public class BrowserMobHttpClient {
     private static final Log LOG = new Log();
@@ -678,15 +673,16 @@ public class BrowserMobHttpClient {
                 HttpEntityEnclosingRequestBase enclosingReq = (HttpEntityEnclosingRequestBase) method;
                 HttpEntity entity = enclosingReq.getEntity();
 
+                HarPostData data = new HarPostData();
+                data.setMimeType(req.getMethod().getFirstHeader("Content-Type").getValue());
+                entry.getRequest().setPostData(data);
+
                 if (urlEncoded || URLEncodedUtils.isEncoded(entity)) {
                     try {
                         final String content = new String(req.getCopy().toByteArray(), "UTF-8");
                         if (content != null && content.length() > 0) {
                             List<NameValuePair> result = new ArrayList<NameValuePair>();
                             URLEncodedUtils.parse(result, new Scanner(content), null);
-
-                            HarPostData data = new HarPostData();
-                            entry.getRequest().setPostData(data);
 
                             ArrayList<HarPostDataParam> params = new ArrayList<HarPostDataParam>();
                             data.setParams(params);
@@ -698,6 +694,9 @@ public class BrowserMobHttpClient {
                     } catch (Exception e) {
                         LOG.info("Unexpected problem when parsing input copy", e);
                     }
+                } else {
+                    // not URL encoded, so let's grab the body of the POST and capture that
+                    data.setText(new String(req.getCopy().toByteArray()));
                 }
             }
         }
