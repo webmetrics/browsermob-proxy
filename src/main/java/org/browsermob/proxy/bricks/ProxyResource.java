@@ -14,14 +14,24 @@ import com.google.sitebricks.http.Put;
 import org.browsermob.core.har.Har;
 import org.browsermob.proxy.ProxyManager;
 import org.browsermob.proxy.ProxyServer;
+import org.browsermob.proxy.http.BrowserMobHttpRequest;
+import org.browsermob.proxy.http.BrowserMobHttpResponse;
+import org.browsermob.proxy.http.RequestInterceptor;
+import org.browsermob.proxy.http.ResponseInterceptor;
+import org.browsermob.proxy.util.Log;
 import org.java_bandwidthlimiter.StreamManager;
 
+import javax.script.*;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Map;
 
 @At("/proxy")
 @Service
 public class ProxyResource {
+    private static final Log LOG = new Log();
+
     private ProxyManager proxyManager;
 
     @Inject
@@ -125,6 +135,68 @@ public class ProxyResource {
             String value = entry.getValue();
             proxy.addHeader(key, value);
         }
+        return Reply.saying().ok();
+    }
+
+    @Post
+    @At("/:port/interceptor/response")
+    public Reply<?> addResponseInterceptor(@Named("port") int port, Request request) throws IOException, ScriptException {
+        ProxyServer proxy = proxyManager.get(port);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        request.readTo(baos);
+
+        ScriptEngineManager mgr = new ScriptEngineManager();
+        final ScriptEngine engine = mgr.getEngineByName("JavaScript");
+        Compilable compilable = (Compilable)  engine;
+        final CompiledScript script = compilable.compile(baos.toString());
+
+        proxy.addResponseInterceptor(new ResponseInterceptor() {
+            @Override
+            public void process(BrowserMobHttpResponse response) {
+                Bindings bindings = engine.createBindings();
+                bindings.put("response", response);
+                bindings.put("log", LOG);
+                try {
+                    script.eval(bindings);
+                } catch (ScriptException e) {
+                    LOG.severe("Could not execute JS-based response interceptor", e);
+                }
+            }
+        });
+
+
+
+        return Reply.saying().ok();
+    }
+
+    @Post
+    @At("/:port/interceptor/request")
+    public Reply<?> addRequestInterceptor(@Named("port") int port, Request request) throws IOException, ScriptException {
+        ProxyServer proxy = proxyManager.get(port);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        request.readTo(baos);
+
+        ScriptEngineManager mgr = new ScriptEngineManager();
+        final ScriptEngine engine = mgr.getEngineByName("JavaScript");
+        Compilable compilable = (Compilable)  engine;
+        final CompiledScript script = compilable.compile(baos.toString());
+
+        proxy.addRequestInterceptor(new RequestInterceptor() {
+            @Override
+            public void process(BrowserMobHttpRequest request) {
+                Bindings bindings = engine.createBindings();
+                bindings.put("request", request);
+                bindings.put("log", LOG);
+                try {
+                    script.eval(bindings);
+                } catch (ScriptException e) {
+                    LOG.severe("Could not execute JS-based response interceptor", e);
+                }
+            }
+        });
+
         return Reply.saying().ok();
     }
 
