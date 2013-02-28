@@ -61,6 +61,8 @@ Once that is done, a new proxy will be available on the port returned. All you h
   - Payload data should be json encoded set of headers (not url-encoded)
  - POST /proxy/[port]/hosts - Overrides normal DNS lookups and remaps the given hosts with the associated IP address
   - Payload data should be json encoded set of name/value pairs (ex: {"example.com": "1.2.3.4"})
+ - POST /proxy/[port]/auth/basic/[domain] - Sets automatic basic authentication for the specified domain
+  - Payload data should be json encoded username and password name/value pairs (ex: {"username": "myUsername", "password": "myPassword"}
 
 For example, once you've started the proxy you can create a new HAR to start recording data like so:
 
