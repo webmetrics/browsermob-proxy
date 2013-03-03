@@ -24,6 +24,7 @@ import org.java_bandwidthlimiter.StreamManager;
 import javax.script.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Map;
 
@@ -121,6 +122,16 @@ public class ProxyResource {
         int responseCode = parseResponseCode(request.param("status"));
         ProxyServer proxy = proxyManager.get(port);
         proxy.whitelistRequests(regex.split(","), responseCode);
+
+        return Reply.saying().ok();
+    }
+
+    @Post
+    @At("/:port/auth/basic/:domain")
+    public Reply<?> autoBasicAuth(@Named("port") int port, @Named("domain") String domain, Request request) {
+        Map<String, String> credentials = request.read(HashMap.class).as(Json.class);
+        ProxyServer proxy = proxyManager.get(port);
+        proxy.autoBasicAuthorization(domain, credentials.get("username"), credentials.get("password"));
 
         return Reply.saying().ok();
     }
