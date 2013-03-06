@@ -63,6 +63,9 @@ Once that is done, a new proxy will be available on the port returned. All you h
   - Payload data should be json encoded set of name/value pairs (ex: {"example.com": "1.2.3.4"})
  - POST /proxy/[port]/auth/basic/[domain] - Sets automatic basic authentication for the specified domain
   - Payload data should be json encoded username and password name/value pairs (ex: {"username": "myUsername", "password": "myPassword"}
+ - PUT /proxy/[port]/wait - wait till all request are being made
+  - quietPeriodInMs - Sets quiet period in milliseconds
+  - timeoutInMs - Sets timeout in milliseconds 
 
 For example, once you've started the proxy you can create a new HAR to start recording data like so:
 

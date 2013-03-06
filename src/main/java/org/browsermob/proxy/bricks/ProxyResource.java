@@ -279,6 +279,16 @@ public class ProxyResource {
     }
 
 
+    @Put
+    @At("/:port/wait")
+    public Reply<?> wait(@Named("port") int port, Request request) {
+        String quietPeriodInMs = request.param("quietPeriodInMs");
+        String timeoutInMs = request.param("timeoutInMs");
+        ProxyServer proxy = proxyManager.get(port);
+        proxy.waitForNetworkTrafficToStop(Integer.parseInt(quietPeriodInMs), Integer.parseInt(timeoutInMs));
+        return Reply.saying().ok();
+    }
+
     private int parseResponseCode(String response)
     {
         int responseCode = 200;
