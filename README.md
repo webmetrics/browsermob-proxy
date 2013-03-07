@@ -57,6 +57,7 @@ Once that is done, a new proxy will be available on the port returned. All you h
   - latency - Add the given latency to each HTTP request
   - enable - (true/false) a boolean that enable bandwidth limiter. By default the limit is disabled, although setting any of the properties above will implicitly enable throttling
   - payloadPercentage - a number ]0, 100] specifying what percentage of data sent is payload. e.g. use this to take into account overhead due to tcp/ip.
+  - maxBitsPerSecond - The max bits per seconds you want this instance of StreamManager to respect.
  - POST /proxy/[port]/headers - Set and override HTTP Request headers. For example setting a custom User-Agent.
   - Payload data should be json encoded set of headers (not url-encoded)
  - POST /proxy/[port]/hosts - Overrides normal DNS lookups and remaps the given hosts with the associated IP address
