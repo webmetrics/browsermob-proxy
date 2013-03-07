@@ -243,6 +243,12 @@ public class ProxyResource {
                 streamManager.setPayloadPercentage(Integer.parseInt(payloadPercentage));
             } catch (NumberFormatException e) { }
         }
+        String maxBitsPerSecond = request.param("maxBitsPerSecond");
+        if (maxBitsPerSecond != null) {
+            try {
+                streamManager.setMaxBitsPerSecondThreshold(Integer.parseInt(maxBitsPerSecond));
+            } catch (NumberFormatException e) { }
+        }
         String enable = request.param("enable");
         if (enable != null) {
             if( Boolean.parseBoolean(enable) ) {
