@@ -77,6 +77,8 @@ public class BrowserMobHttpClient {
 
     private boolean captureHeaders;
     private boolean captureContent;
+    // if captureContent is set, default policy is to capture binary contents too
+    private boolean captureBinaryContent = true;
 
     private SimulatedSocketFactory socketFactory;
     private TrustingSSLSocketFactory sslSocketFactory;
@@ -733,9 +735,14 @@ public class BrowserMobHttpClient {
                             }
                         }
 
-                        if (contentType != null && contentType.startsWith("text/")) {
+                        if (contentType != null && (contentType.startsWith("text/")  || 
+                        		contentType.startsWith("application/x-javascript")) ||
+                        		contentType.startsWith("application/javascript")  ||
+                        		contentType.startsWith("application/json")  ||
+                        		contentType.startsWith("application/xml")  ||
+                        		contentType.startsWith("application/xhtml+xml")) {
                             entry.getResponse().getContent().setText(new String(copy.toByteArray()));
-                        } else {
+                        } else if(captureBinaryContent){
                             entry.getResponse().getContent().setText(Base64.byteArrayToBase64(copy.toByteArray()));
                         }
                     }
@@ -956,6 +963,10 @@ public class BrowserMobHttpClient {
 
     public void setCaptureContent(boolean captureContent) {
         this.captureContent = captureContent;
+    }
+    
+    public void setCaptureBinaryContent(boolean captureBinaryContent) {
+        this.captureBinaryContent = captureBinaryContent;
     }
 
     public void setHttpProxy(String httpProxy) {

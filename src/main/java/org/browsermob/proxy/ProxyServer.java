@@ -245,6 +245,10 @@ public class ProxyServer {
     public void setCaptureContent(boolean captureContent) {
         client.setCaptureContent(captureContent);
     }
+    
+    public void setCaptureBinaryContent(boolean captureBinaryContent) {
+        client.setCaptureBinaryContent(captureBinaryContent);
+    }
 
     public void clearDNSCache() {
         client.clearDNSCache();
