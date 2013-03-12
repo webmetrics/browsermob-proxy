@@ -259,6 +259,37 @@ public class ProxyResource {
         }
         return Reply.saying().ok();
     }
+    
+    @Put
+    @At("/:port/timeout")
+    public Reply<?> timeout(@Named("port") int port, Request request) {
+        ProxyServer proxy = proxyManager.get(port);
+        String requestTimeout = request.param("requestTimeout");
+        if (requestTimeout != null) {
+            try {
+                proxy.setRequestTimeout(Integer.parseInt(requestTimeout));
+            } catch (NumberFormatException e) { }
+        }
+        String readTimeout = request.param("readTimeout");
+        if (readTimeout != null) {
+            try {
+                proxy.setSocketOperationTimeout(Integer.parseInt(readTimeout));
+            } catch (NumberFormatException e) { }
+        }
+        String connectionTimeout = request.param("connectionTimeout");
+        if (connectionTimeout != null) {
+            try {
+                proxy.setConnectionTimeout(Integer.parseInt(connectionTimeout));
+            } catch (NumberFormatException e) { }
+        }
+        String dnsCacheTimeout = request.param("dnsCacheTimeout");
+        if (dnsCacheTimeout != null) {
+            try {
+                proxy.setDNSCacheTimeout(Integer.parseInt(dnsCacheTimeout));
+            } catch (NumberFormatException e) { }
+        }
+        return Reply.saying().ok();
+    }
 
     @Delete
     @At("/:port")
