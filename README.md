@@ -75,6 +75,9 @@ Once that is done, a new proxy will be available on the port returned. All you h
   - readTimeout - read timeout in milliseconds. Which is the timeout for waiting for data or, put differently, a maximum period inactivity between two consecutive data packets). A timeout value of zero is interpreted as an infinite timeout.
   - connectionTimeout - Determines the timeout in milliseconds until a connection is established. A timeout value of zero is interpreted as an infinite timeout. 
   - dnsCacheTimeout - Sets the maximum length of time that records will be stored in this Cache. A negative value disables this feature (that is, sets no limit).
+ - PUT /proxy/[port]/rewrite - Redirecting URL's
+  - matchRegex - a matching URL regular expression
+  - replace - replacement URL
  - PUT /proxy/[port]/retry - Setting the retry count
   - retrycount - the number of times a method will be retried 
 

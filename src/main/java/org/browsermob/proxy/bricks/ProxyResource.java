@@ -329,6 +329,16 @@ public class ProxyResource {
     }
 
     @Put
+    @At("/:port/rewrite")
+    public Reply<?> rewriteUrl(@Named("port") int port, Request request) {
+        String match = request.param("matchRegex");
+        String replace = request.param("replace");
+        ProxyServer proxy = proxyManager.get(port);
+        proxy.rewriteUrl(match, replace);
+        return Reply.saying().ok();
+    } 
+    
+    @Put
     @At("/:port/retry")
     public Reply<?> retryCount(@Named("port") int port, Request request) {
         String count = request.param("retrycount");
