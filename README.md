@@ -42,7 +42,7 @@ Once that is done, a new proxy will be available on the port returned. All you h
   - initialPageRef - the string name of the first page ref that should be used in the HAR. Defaults to "Page 1".
   - captureHeaders - Boolean, capture headers
   - captureContent - Boolean, capture content bodies
-  - captureBinaryContent - Boolean, capture binary content 
+  - captureBinaryContent - Boolean, capture binary content
  - PUT /proxy/[port]/har/pageRef - starts a new page on the existing HAR. Supports the following parameters:
   - pageRef - the string name of the first page ref that should be used in the HAR. Defaults to "Page N" where N is the next page number.
  - PUT /proxy/[port]/har/pageRef - creates a new HAR attached to the proxy and returns the HAR content if there was a previous HAR
@@ -79,7 +79,8 @@ Once that is done, a new proxy will be available on the port returned. All you h
   - matchRegex - a matching URL regular expression
   - replace - replacement URL
  - PUT /proxy/[port]/retry - Setting the retry count
-  - retrycount - the number of times a method will be retried 
+  - retrycount - the number of times a method will be retried
+ - DELETE /proxy/[port]/clearDnsCache - Empties the Cache.
 
 For example, once you've started the proxy you can create a new HAR to start recording data like so:
 
