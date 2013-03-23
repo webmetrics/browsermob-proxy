@@ -326,6 +326,16 @@ public class ProxyResource {
         return Reply.saying().ok();
     }
 
+    @Put
+    @At("/:port/rewrite")
+    public Reply<?> rewriteUrl(@Named("port") int port, Request request) {
+        String match = request.param("matchRegex");
+        String replace = request.param("replace");
+        ProxyServer proxy = proxyManager.get(port);
+        proxy.rewriteUrl(match, replace);
+        return Reply.saying().ok();
+    } 
+    
     private int parseResponseCode(String response)
     {
         int responseCode = 200;
