@@ -325,6 +325,14 @@ public class ProxyResource {
         proxy.waitForNetworkTrafficToStop(Integer.parseInt(quietPeriodInMs), Integer.parseInt(timeoutInMs));
         return Reply.saying().ok();
     }
+    
+    @Delete
+    @At("/:port/clearDnsCache")
+    public Reply<?> clearDnsCache(@Named("port") int port) throws Exception {
+    	ProxyServer proxy = proxyManager.get(port);
+    	proxy.clearDNSCache();
+        return Reply.saying().ok();
+    }
 
     private int parseResponseCode(String response)
     {
