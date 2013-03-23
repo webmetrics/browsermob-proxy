@@ -40,6 +40,9 @@ Once that is done, a new proxy will be available on the port returned. All you h
 
  - PUT /proxy/[port]/har - creates a new HAR attached to the proxy and returns the HAR content if there was a previous HAR. Supports the following parameters:
   - initialPageRef - the string name of the first page ref that should be used in the HAR. Defaults to "Page 1".
+  - captureHeaders - Boolean, capture headers
+  - captureContent - Boolean, capture content bodies
+  - captureBinaryContent - Boolean, capture binary content 
  - PUT /proxy/[port]/har/pageRef - starts a new page on the existing HAR. Supports the following parameters:
   - pageRef - the string name of the first page ref that should be used in the HAR. Defaults to "Page N" where N is the next page number.
  - PUT /proxy/[port]/har/pageRef - creates a new HAR attached to the proxy and returns the HAR content if there was a previous HAR

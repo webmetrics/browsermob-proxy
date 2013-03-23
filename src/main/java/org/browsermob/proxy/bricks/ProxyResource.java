@@ -84,8 +84,10 @@ public class ProxyResource {
 
         String captureHeaders = request.param("captureHeaders");
         String captureContent = request.param("captureContent");
+        String captureBinaryContent = request.param("captureBinaryContent"); 
         proxy.setCaptureHeaders(Boolean.parseBoolean(captureHeaders));
         proxy.setCaptureContent(Boolean.parseBoolean(captureContent));
+        proxy.setCaptureBinaryContent(Boolean.parseBoolean(captureBinaryContent)); 
 
         if (oldHar != null) {
             return Reply.with(oldHar).as(Json.class);
