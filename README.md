@@ -80,7 +80,7 @@ Once that is done, a new proxy will be available on the port returned. All you h
   - replace - replacement URL
  - PUT /proxy/[port]/retry - Setting the retry count
   - retrycount - the number of times a method will be retried
- - DELETE /proxy/[port]/clearDnsCache - Empties the Cache.
+ - DELETE /proxy/[port]/dns/cache - Empties the Cache.
 
 For example, once you've started the proxy you can create a new HAR to start recording data like so:
 

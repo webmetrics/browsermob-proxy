@@ -329,7 +329,7 @@ public class ProxyResource {
     }
     
     @Delete
-    @At("/:port/clearDnsCache")
+    @At("/:port/dns/cache")
     public Reply<?> clearDnsCache(@Named("port") int port) throws Exception {
     	ProxyServer proxy = proxyManager.get(port);
     	proxy.clearDNSCache();
