@@ -328,6 +328,15 @@ public class ProxyResource {
         return Reply.saying().ok();
     }
 
+    @Put
+    @At("/:port/retry")
+    public Reply<?> retryCount(@Named("port") int port, Request request) {
+        String count = request.param("retrycount");
+        ProxyServer proxy = proxyManager.get(port);
+        proxy.setRetryCount(Integer.parseInt(count));
+        return Reply.saying().ok();
+    } 
+    
     private int parseResponseCode(String response)
     {
         int responseCode = 200;
