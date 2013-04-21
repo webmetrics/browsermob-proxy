@@ -2,20 +2,15 @@ package org.browsermob.proxy;
 
 import junit.framework.Assert;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpHost;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.browsermob.core.har.*;
 import org.browsermob.proxy.http.BrowserMobHttpRequest;
 import org.browsermob.proxy.http.RequestInterceptor;
 import org.browsermob.proxy.util.IOUtils;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -29,26 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
-public class MailingListIssuesTest {
-    private DummyServer dummy = new DummyServer(8080);
-    private ProxyServer proxy = new ProxyServer(8081);
-    private DefaultHttpClient client = new DefaultHttpClient();
-
-    @Before
-    public void startServer() throws Exception {
-        dummy.start();
-        proxy.start();
-
-        HttpHost proxyHost = new HttpHost("127.0.0.1", 8081, "http");
-        client.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxyHost);
-    }
-
-    @After
-    public void stopServer() throws Exception {
-        proxy.stop();
-        dummy.stop();
-    }
-
+public class MailingListIssuesTest extends DummyServerTest {
     @Test
     public void testThatInterceptorIsCalled() throws IOException, InterruptedException {
         final boolean[] interceptorHit = {false};

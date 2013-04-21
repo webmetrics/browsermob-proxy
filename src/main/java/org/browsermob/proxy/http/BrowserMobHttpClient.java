@@ -8,6 +8,7 @@ import org.apache.http.auth.*;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.methods.*;
 import org.apache.http.client.params.ClientPNames;
+import org.apache.http.client.params.CookiePolicy;
 import org.apache.http.client.protocol.ClientContext;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.conn.ClientConnectionRequest;
@@ -17,14 +18,16 @@ import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.conn.routing.HttpRoute;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
-import org.apache.http.cookie.Cookie;
+import org.apache.http.cookie.*;
 import org.apache.http.cookie.params.CookieSpecPNames;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.impl.cookie.BasicClientCookie;
+import org.apache.http.impl.cookie.BrowserCompatSpec;
 import org.apache.http.params.CoreConnectionPNames;
+import org.apache.http.params.HttpParams;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.ExecutionContext;
 import org.apache.http.protocol.HttpContext;
@@ -171,6 +174,7 @@ public class BrowserMobHttpClient {
         httpClient.setCredentialsProvider(credsProvider);
         httpClient.addRequestInterceptor(new PreemptiveAuth(), 0);
         httpClient.getParams().setParameter(ClientPNames.HANDLE_REDIRECTS, true);
+        httpClient.getParams().setParameter(ClientPNames.COOKIE_POLICY, CookiePolicy.BROWSER_COMPATIBILITY);
         httpClient.getParams().setParameter(CookieSpecPNames.SINGLE_COOKIE_HEADER, Boolean.TRUE);
         setRetryCount(0);
 
@@ -502,12 +506,13 @@ public class BrowserMobHttpClient {
         }
         Date start = new Date();
 
-        // clear out any connection-related information so that it's not stale from previous use of this thread.
-        RequestInfo.clear(url);
-
         // link the object up now, before we make the request, so that if we get cut off (ie: favicon.ico request and browser shuts down)
         // we still have the attempt associated, even if we never got a response
         HarEntry entry = new HarEntry(harPageRef);
+
+        // clear out any connection-related information so that it's not stale from previous use of this thread.
+        RequestInfo.clear(url, entry);
+
         entry.setRequest(new HarRequest(method.getMethod(), url, method.getProtocolVersion().getProtocol()));
         entry.setResponse(new HarResponse(-999, "NO RESPONSE", method.getProtocolVersion().getProtocol()));
         if (this.har != null && harPageRef != null) {
@@ -703,13 +708,13 @@ public class BrowserMobHttpClient {
             }
         }
 
-        //capture request cookies       
-        List<Cookie> cookies = (List<Cookie>) ctx.getAttribute("browsermob.http.request.cookies");        
-        if (cookies != null) {
-	        for (Cookie c : cookies) {
-		        HarCookie hc = toHarCookie(c);
-		        entry.getRequest().getCookies().add(hc);        	
-	        }
+        //capture request cookies
+        javax.servlet.http.Cookie[] cookies = req.getProxyRequest().getCookies();
+        for (javax.servlet.http.Cookie cookie : cookies) {
+            HarCookie hc = new HarCookie();
+            hc.setName(cookie.getName());
+            hc.setValue(cookie.getValue());
+            entry.getRequest().getCookies().add(hc);
         }
 
         String contentType = null;
@@ -764,15 +769,6 @@ public class BrowserMobHttpClient {
                 }
             } catch (UnsupportedEncodingException e) {
                 throw new RuntimeException(e);
-            }
-            
-            //capture response cookies
-            cookies = (List<Cookie>) ctx.getAttribute("browsermob.http.response.cookies");            
-            if (cookies != null) {
-    	        for (Cookie c : cookies) {
-    		        HarCookie hc = toHarCookie(c);
-    		        entry.getResponse().getCookies().add(hc);        	
-    	        }
             }
         }
 
@@ -938,9 +934,20 @@ public class BrowserMobHttpClient {
     }
 
     public void prepareForBrowser() {
-    	//save request and reponse cookies to the context
-    	httpClient.addRequestInterceptor(new RequestCookiesInterceptor());
-    	httpClient.addResponseInterceptor(new ResponseCookiesInterceptor());
+        // Clear cookies, let the browser handle them
+        httpClient.setCookieStore(new BlankCookieStore());
+        httpClient.getCookieSpecs().register("easy", new CookieSpecFactory() {
+            @Override
+            public CookieSpec newInstance(HttpParams params) {
+                return new BrowserCompatSpec() {
+                    @Override
+                    public void validate(Cookie cookie, CookieOrigin origin) throws MalformedCookieException {
+                        // easy!
+                    }
+                };
+            }
+        });
+        httpClient.getParams().setParameter(ClientPNames.COOKIE_POLICY, "easy");
         decompress = false;
         setFollowRedirects(false);
     }
@@ -1004,16 +1011,6 @@ public class BrowserMobHttpClient {
                 }
             }
         }
-    }
-        
-    private HarCookie toHarCookie(Cookie c) {
-        HarCookie hc = new HarCookie();
-        hc.setName(c.getName());
-        hc.setPath(c.getPath());
-        hc.setValue(c.getValue());
-        hc.setDomain(c.getDomain());
-        hc.setExpires(c.getExpiryDate());
-        return hc;    	
     }
 
     class ActiveRequest {

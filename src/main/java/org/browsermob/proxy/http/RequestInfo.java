@@ -1,5 +1,6 @@
 package org.browsermob.proxy.http;
 
+import org.browsermob.core.har.HarEntry;
 import org.browsermob.core.har.HarTimings;
 import org.browsermob.proxy.util.Log;
 
@@ -19,13 +20,14 @@ public class RequestInfo {
         return instance.get();
     }
 
-    public static void clear(String url) {
+    public static void clear(String url, HarEntry entry) {
         clear();
         RequestInfo info = get();
         info.url = url;
+        info.entry = entry;
     }
 
-    public static void clear() {
+    private static void clear() {
         RequestInfo info = get();
         info.blocked = null;
         info.dns = null;
@@ -50,6 +52,7 @@ public class RequestInfo {
     private Date start;
     private Date end;
     private String url;
+    private HarEntry entry;
 
     private Long ping(Date start, Date end) {
         if (this.start == null) {
@@ -222,5 +225,9 @@ public class RequestInfo {
         }
 
         return new HarTimings(blocked, dns, connect, send, wait, receive);
+    }
+
+    public HarEntry getEntry() {
+        return entry;
     }
 }
