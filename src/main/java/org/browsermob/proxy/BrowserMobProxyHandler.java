@@ -214,7 +214,9 @@ public class BrowserMobProxyHandler extends SeleniumProxyHandler {
                             hasContent = true;
                         }
 
-                        httpReq.addRequestHeader(hdr, val);
+                        if (!_DontProxyHeaders.containsKey(hdr)) {
+                            httpReq.addRequestHeader(hdr, val);
+                        }
                     }
                 }
             }
