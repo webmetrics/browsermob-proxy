@@ -74,7 +74,7 @@ public class BrowserMobHttpRequest {
             stringEntity = new StringEntity(body, charSet);
         } catch (UnsupportedEncodingException e) {
             try {
-                stringEntity = new StringEntity(body, null);
+                stringEntity = new StringEntity(body, (String) null);
             } catch (UnsupportedEncodingException e1) {
                 // this won't happen
             }

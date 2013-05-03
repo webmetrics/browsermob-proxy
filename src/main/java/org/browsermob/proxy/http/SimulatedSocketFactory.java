@@ -1,6 +1,7 @@
 package org.browsermob.proxy.http;
 
 import org.apache.http.conn.ConnectTimeoutException;
+import org.apache.http.conn.HttpInetSocketAddress;
 import org.apache.http.conn.scheme.HostNameResolver;
 import org.apache.http.conn.scheme.SchemeSocketFactory;
 import org.apache.http.params.HttpConnectionParams;
@@ -165,10 +166,16 @@ public class SimulatedSocketFactory implements SchemeSocketFactory {
             sock.bind( localAddress );
         }
 
-        //TODO: this has to be changed to HttpInetSocketAddress once we upgrade to 4.2.1
+        String hostName;
+        if (remoteAddress instanceof HttpInetSocketAddress) {
+            hostName = ((HttpInetSocketAddress) remoteAddress).getHttpHost().getHostName();
+        } else {
+            hostName = resolveHostName(remoteAddress);
+        }
+
         InetSocketAddress remoteAddr = remoteAddress;
         if (this.hostNameResolver != null) {
-            remoteAddr = new InetSocketAddress(this.hostNameResolver.resolve(resolveHostName(remoteAddress)), remoteAddress.getPort());
+            remoteAddr = new InetSocketAddress(this.hostNameResolver.resolve(hostName), remoteAddress.getPort());
         }
 
         int timeout = HttpConnectionParams.getConnectionTimeout(params);

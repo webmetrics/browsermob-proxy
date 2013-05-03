@@ -174,7 +174,7 @@ public class MailingListIssuesTest extends DummyServerTest {
         Assert.assertNotNull("Request is null", request);
         HarPostData postdata = request.getPostData();
         Assert.assertNotNull("PostData is null", postdata);
-        Assert.assertEquals("application/x-www-form-urlencoded; charset=ISO-8859-1", postdata.getMimeType());
+        Assert.assertEquals("application/x-www-form-urlencoded", postdata.getMimeType());
         Assert.assertEquals(1, postdata.getParams().size());
         Assert.assertEquals("foo", postdata.getParams().get(0).getName());
         Assert.assertEquals("bar", postdata.getParams().get(0).getValue());
